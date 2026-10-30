@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Visual Board Monitoring System (SCM)</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .login-bg {
+            background-color: #0f172a;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.88)), 
+                              url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><path fill='%23ffffff' d='M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S397.4 0 256 0zm0 472c-119.1 0-216-96.9-216-216S136.9 40 256 40s216 96.9 216 216-96.9 216-216 216zm129.5-274.6c-4.4-4-10.8-5.3-16.5-3.5l-63.1 19.8-19.1-39.7c-2.4-5-7.7-8.1-13.3-7.9-5.7.2-10.8 3.5-13.1 8.7L228 248.1l-25.7-13.2c-4.6-2.4-10.2-2.1-14.6.8l-52.7 34.6c-5.2 3.4-7.5 9.8-5.5 15.6 2 5.9 7.8 9.6 14 9.3l49.8-1.7 54.8 28.3c4.2 2.2 9.2 2.2 13.5.1l54.3-26 31.8 19.3c3.9 2.4 8.8 2.6 12.8.6 4-2 6.8-5.7 7.5-10.2l12.4-78.5c.8-5.4-1.9-10.7-6.5-13.6zm-113.8 68.6l-48.4-25 15.5-35.3 32.9 60.3zm42.7 4.1l-40-24.3 22.2-46.1 17.8 70.4zm34.2-28.7l-26.6-16.1 27.6-8.7-1 24.8z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 40vh;
+        }
+        .table-fixed-layout th, .table-fixed-layout td {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+        /* Supervisor Green Theme Customization */
+        body.theme-supervisor header {
+            background-color: #065f46 !important; /* Emerald 800 */
+        }
+        body.theme-supervisor header .bg-indigo-950 {
+            background-color: #022c22 !important; /* Emerald 950 */
+            border-color: #047857 !important;
+        }
+        
+        .modal-hidden {
+            display: none !important;
+            pointer-events: none !important;
+        }
+        
+        @media print {
+            header, .no-print, #login-page, #supervisor-popup-modal, #clear-confirm-modal { display: none !important; }
+            body { background: #ffffff !important; font-size: 9pt; color: #000000 !important; }
+            #page-summary, main { padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body id="main-body" class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+    <!-- MODAL PENGESAHAN CLEAR FORM -->
+    <div id="clear-confirm-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-100">
+            <div class="flex items-center gap-3 border-b pb-3">
+                <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-eraser"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Clear Monitoring Form?</h3>
+                    <p class="text-xs text-slate-500">Are you sure you want to clear all unsaved inputs in the current monitoring form? Previously saved records will not be deleted.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeClearModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition">
+                    Cancel
+                </button>
+                <button type="button" onclick="executeClearMonitoringForm()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1">
+                    <i class="fa-solid fa-check"></i> Clear Form
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- POP-UP NOTIFICATION MODAL -->
+    <div id="supervisor-popup-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-100">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 uppercase">Peringatan Tindakan Penambahbaikan</h3>
+                        <p class="text-[11px] text-slate-500">Terdapat tindakan tertunggak yang memerlukan gambar penambahbaikan.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSupervisorPopup()" class="text-slate-400 hover:text-slate-700 text-lg font-bold px-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="supervisor-popup-content" class="max-h-60 overflow-y-auto space-y-2 text-xs"></div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button type="button" onclick="closeSupervisorPopup()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition">
+                    Tutup
+                </button>
+                <button type="button" onclick="goToMonitoringFromPopup()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1">
+                    <i class="fa-solid fa-arrow-right"></i> Pergi ke Monitoring
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- LOGIN PAGE -->
+    <div id="login-page" class="fixed inset-0 login-bg z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-6 border border-slate-100">
+            <div class="text-center space-y-2">
+                <div class="inline-flex w-14 h-14 sm:w-16 sm:h-16 bg-indigo-50 text-indigo-900 rounded-full items-center justify-center text-xl sm:text-2xl font-bold shadow-inner mb-1">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">PC Visual Board Monitoring System (SCM)</h2>
+                <p class="text-xs text-slate-500 font-medium">Sila pilih peranan log masuk anda di bawah.</p>
+            </div>
+            <div class="flex bg-slate-100 p-1 rounded-xl">
+                <button type="button" onclick="switchLoginTab('admin')" id="tab-login-admin" class="flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow transition">
+                    <i class="fa-solid fa-user-shield mr-1"></i> Admin Login
+                </button>
+                <button type="button" onclick="switchLoginTab('supervisor')" id="tab-login-supervisor" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition">
+                    <i class="fa-solid fa-user-gear mr-1"></i> Supervisor Login
+                </button>
+            </div>
+            <form id="form-login-admin" onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 text-[11px] text-indigo-900 font-medium">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Log masuk Pentadbir Sistem yang sah.
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1"><i class="fa-solid fa-user mr-1 text-indigo-600"></i> ID Admin</label>
+                    <input type="text" id="adminUsername" placeholder="Masukkan ID Admin" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1"><i class="fa-solid fa-key mr-1 text-indigo-600"></i> Kata Laluan</label>
+                    <input type="password" id="adminPassword" placeholder="Masukkan Kata Laluan" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800" autocomplete="new-password">
+                </div>
+                <div id="adminErrorMsg" class="hidden text-rose-600 text-xs font-semibold text-center bg-rose-50 p-2 rounded-lg">
+                    ID Admin atau Kata Laluan tidak sah.
+                </div>
+                <button type="submit" class="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-bold rounded-xl shadow-lg transition duration-200 text-sm">
+                    Log Masuk Sebagai Admin
+                </button>
+            </form>
+            <form id="form-login-supervisor" onsubmit="handleSupervisorLogin(event)" class="space-y-4 hidden">
+                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-[11px] text-emerald-900 font-medium">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Log masuk portal khas Supervisor / Executive.
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1"><i class="fa-solid fa-id-badge mr-1 text-emerald-600"></i> ID Supervisor</label>
+                    <input type="text" id="supUsername" placeholder="Masukkan ID Supervisor" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-800 uppercase" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1"><i class="fa-solid fa-key mr-1 text-emerald-600"></i> Kata Laluan</label>
+                    <input type="password" id="supPassword" placeholder="Masukkan Kata Laluan" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-800" autocomplete="new-password">
+                </div>
+                <div id="supErrorMsg" class="hidden text-rose-600 text-xs font-semibold text-center bg-rose-50 p-2 rounded-lg">
+                    ID Supervisor atau Kata Laluan tidak sah.
+                </div>
+                <button type="submit" class="w-full py-3 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition duration-200 text-sm">
+                    Log Masuk Sebagai Supervisor
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- HEADER NAVBAR -->
+    <header class="bg-indigo-900 text-white shadow-md no-print transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="text-center lg:text-left">
+                <h1 class="text-lg sm:text-xl font-bold tracking-wide">PC Visual Board Monitoring System (SCM)</h1>
+                <p class="text-xs text-indigo-200">Unit Diselia: <span id="header-assigned-unit" class="font-bold text-emerald-300">SEMUA KUMPULAN</span> | Tarikh: <span id="header-audit-date" class="font-semibold text-white">-</span></p>
+            </div>
+            <div class="flex flex-wrap justify-center items-center bg-indigo-950 p-1 rounded-lg border border-indigo-800 gap-1">
+                <button type="button" onclick="switchPage('summary')" id="nav-btn-summary" class="px-3 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-900 shadow transition">
+                    <i class="fa-solid fa-square-poll-vertical mr-1"></i> Audit Summary
+                </button>
+                <button type="button" onclick="switchPage('dashboard')" id="nav-btn-dashboard" class="px-3 py-1.5 text-xs font-bold rounded-md text-indigo-200 hover:text-white transition">
+                    <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
+                </button>
+                <button type="button" onclick="switchPage('monitoring')" id="nav-btn-monitoring" class="px-3 py-1.5 text-xs font-bold rounded-md text-indigo-200 hover:text-white transition">
+                    <i class="fa-solid fa-table-cells mr-1"></i> Monitoring
+                </button>
+                <button type="button" onclick="switchPage('records')" id="nav-btn-records" class="px-3 py-1.5 text-xs font-bold rounded-md text-indigo-200 hover:text-white transition">
+                    <i class="fa-solid fa-clipboard-list mr-1"></i> Rekod
+                </button>
+                <button type="button" onclick="switchPage('alerts')" id="nav-btn-alerts" class="px-3 py-1.5 text-xs font-bold rounded-md text-indigo-200 hover:text-white transition relative">
+                    <i class="fa-solid fa-bell mr-1"></i> Notifications 
+                    <span id="nav-notification-badge" class="hidden ml-1 px-1.5 py-0.2 bg-rose-600 text-white rounded-full text-[9px] font-bold">0</span>
+                </button>
+                <button type="button" onclick="switchPage('email-settings')" id="nav-btn-email-settings" class="px-3 py-1.5 text-xs font-bold rounded-md text-indigo-200 hover:text-white transition">
+                    <i class="fa-solid fa-envelope-gear mr-1"></i> Email Settings
+                </button>
+            </div>
+            <div class="flex flex-wrap justify-center items-center gap-2">
+                <button type="button" onclick="confirmClearView()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-lg transition shadow flex items-center gap-1" title="Kosongkan Borang">
+                    <i class="fa-solid fa-eraser"></i> Clear
+                </button>
+                <button type="button" onclick="printSystemPDF()" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition shadow flex items-center gap-1">
+                    <i class="fa-solid fa-print"></i> Print
+                </button>
+                <button type="button" onclick="generateSingleFullPDF()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition shadow flex items-center gap-1">
+                    <i class="fa-solid fa-download"></i> Download PDF
+                </button>
+                <button type="button" id="btn-export-csv" onclick="exportCSV()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg transition shadow">
+                    <i class="fa-solid fa-file-csv mr-1"></i> CSV
+                </button>
+                <button type="button" onclick="handleLogout()" class="px-3 py-2 bg-rose-700 hover:bg-rose-600 text-white text-xs font-semibold rounded-lg transition shadow">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Log Out
+                </button>
+            </div>
+        </div>
+    </header>
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6 bg-white">
+        <!-- PAGE 0: AUDIT SCORE SUMMARY -->
+        <div id="page-summary" class="space-y-6">
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/30 text-indigo-200 text-xs font-bold uppercase tracking-wider mb-2 border border-indigo-400/30">
+                        <i class="fa-solid fa-square-poll-vertical"></i> Audit Score Summary
+                    </div>
+                    <h2 class="text-2xl font-black tracking-tight" id="sum-display-group">STAMPING — PC COIL DELIVERY</h2>
+                    <p class="text-xs text-indigo-200 mt-1">
+                        Auditor: <span id="sum-display-auditor" class="font-bold text-white">-</span> | 
+                        Supervisor: <span id="sum-display-supervisor" class="font-bold text-white">-</span> | 
+                        Tarikh Audit: <span id="sum-display-auditdate" class="font-bold text-white">-</span>
+                    </p>
+                </div>
+                <div class="text-left md:text-right bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/10 w-full md:w-auto">
+                    <p class="text-[10px] text-indigo-200 uppercase font-bold">Tarikh Laporan Dijana</p>
+                    <p id="sum-display-gendate" class="text-sm font-black text-emerald-400">-</p>
+                </div>
+            </div>
+            <!-- SCORE SUMMARY TABLE -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden space-y-3 p-5">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-indigo-600"></i> Score Summary Table
+                    </h3>
+                    <span class="text-[11px] text-slate-500 font-medium">*Pemarkahan mengikut kategori dan elemen sistem SCM</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs min-w-[700px] table-fixed-layout">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold uppercase border-b">
+                                <th class="py-3 px-3 w-14 text-center">Bil.</th>
+                                <th class="py-3 px-4 w-44">Element Category</th>
+                                <th class="py-3 px-4">Topics / Elements</th>
+                                <th class="py-3 px-4 w-32 text-center">Score / Level</th>
+                                <th class="py-3 px-4 w-32 text-center">Category Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryElementsTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- OVERALL SCORE -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4 border border-indigo-900">
+                <div class="space-y-1 text-center md:text-left">
+                    <div class="text-indigo-300 text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-award mr-1"></i> Penilaian Pencapaian Keseluruhan</div>
+                    <h3 class="text-xl font-black">Overall Score Summary</h3>
+                    <p class="text-xs text-slate-300">Pengiraan keseluruhan berdasarkan status pemantauan visual board 13 elemen sedia ada.</p>
+                </div>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/10 text-center">
+                        <p class="text-[10px] uppercase font-bold text-indigo-200">Overall Score</p>
+                        <p id="overall-score-val" class="text-xl font-black text-white mt-0.5">0 / 13</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/10 text-center">
+                        <p class="text-[10px] uppercase font-bold text-indigo-200">Overall Percentage</p>
+                        <p id="overall-percent-val" class="text-xl font-black text-emerald-400 mt-0.5">0%</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/10 text-center">
+                        <p class="text-[10px] uppercase font-bold text-indigo-200">Overall Level / Status</p>
+                        <p id="overall-level-val" class="text-sm font-black px-3 py-1 rounded mt-1 bg-slate-800 text-white">-</p>
+                    </div>
+                </div>
+            </div>
+            <!-- ISSUES REPORT -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-5 space-y-3">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Issues Report & Action Status
+                    </h3>
+                    <span class="text-[11px] text-slate-500 font-medium">*Senarai isu dan status tindakan penambahbaikan</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs min-w-[750px]">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold uppercase border-b">
+                                <th class="p-3 w-16 text-center">Bil.</th>
+                                <th class="p-3 w-1/3">Issue / Problem Description</th>
+                                <th class="p-3">Action / Improvement Required</th>
+                                <th class="p-3 w-32">PIC / Responsible</th>
+                                <th class="p-3 w-32 text-center">Submission Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryIssuesTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- PAGE 1: DASHBOARD -->
+        <div id="page-dashboard" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-slate-200 no-print">
+                <h2 class="text-base font-bold text-slate-800"><i class="fa-solid fa-chart-line mr-2 text-indigo-600"></i>Dashboard Pemantauan SCM</h2>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <span class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap">PILIH KAWASAN / ITEM:</span>
+                    <select id="dashGroupDropdown" onchange="handleDashGroupFilter()" class="w-full sm:w-auto px-3 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg">
+                        <option value="ALL">Semua Kawasan / Kumpulan</option>
+                        <option value="STAMPING — PC COIL DELIVERY">STAMPING — PC COIL DELIVERY</option>
+                        <option value="STAMPING — PC STORAGE">STAMPING — PC STORAGE</option>
+                        <option value="BA1 — PC RECEIVING">BA1 — PC RECEIVING</option>
+                        <option value="BA1 — PC SUPPLY">BA1 — PC SUPPLY</option>
+                        <option value="BA1 — PC RECEIVING & SUPPLY VX11">BA1 — PC RECEIVING & SUPPLY VX11</option>
+                        <option value="BA2 — PC RECEIVING & SUPPLY">BA2 — PC RECEIVING & SUPPLY</option>
+                        <option value="PAINTING — PC SPARE PART">PAINTING — PC SPARE PART</option>
+                        <option value="TF1 — PC TRIM & CHASSIS">TF1 — PC TRIM & CHASSIS</option>
+                        <option value="TF1 — PC FINAL">TF1 — PC FINAL</option>
+                        <option value="TF1 — PC ORDERING & HVI">TF1 — PC ORDERING & HVI</option>
+                        <option value="TF1 — PC INTERNAL SYNCHRO">TF1 — PC INTERNAL SYNCHRO</option>
+                        <option value="TF1 — PC RECEIVING TFN">TF1 — PC RECEIVING TFN</option>
+                        <option value="TF1 — PC RECEIVING TFW & TFS">TF1 — PC RECEIVING TFW & TFS</option>
+                        <option value="TF2 — PC STORAGE & ORDERING">TF2 — PC STORAGE & ORDERING</option>
+                        <option value="TF2 — PC RECEIVING">TF2 — PC RECEIVING</option>
+                        <option value="TF2 — PC SPS">TF2 — PC SPS</option>
+                        <option value="TF2 — PC SUPPLY">TF2 — PC SUPPLY</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Jumlah Rekod Unit</p>
+                        <h3 id="stat-total" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-boxes-stacked"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Purata Kemajuan</p>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <h3 id="stat-avg-progress" class="text-2xl font-bold text-indigo-600">0%</h3>
+                            <span id="stat-avg-label" class="text-xs font-bold px-2 py-0.5 rounded uppercase hidden"></span>
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-percent"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Lengkap (13/13)</p>
+                        <h3 id="stat-completed" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-circle-check"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Belum Lengkap (7 Hari)</p>
+                        <h3 id="stat-in-progress" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <div class="border-b pb-2">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-bell text-amber-500"></i> 7-Day Reminder & Countdown (Disusun Mengikut Kumpulan)
+                    </h3>
+                </div>
+                <div id="dashboardGroupedContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase mb-4"><i class="fa-solid fa-chart-pie mr-2 text-indigo-600"></i>Taburan Status Pemantauan</h3>
+                    <div class="relative h-64 flex justify-center items-center"><canvas id="statusDoughnutChart"></canvas></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 lg:col-span-2 flex flex-col justify-between">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase mb-4"><i class="fa-solid fa-chart-column mr-2 text-indigo-600"></i>Peratusan Kemajuan SCM</h3>
+                    <div class="relative h-64"><canvas id="progressBarChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <!-- PAGE 2: MONITORING SHEET -->
+        <div id="page-monitoring" class="space-y-4 hidden">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3 no-print">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+                    <h4 class="text-xs font-bold text-indigo-900 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-id-card text-indigo-600"></i> Profil Supervisor (SV) & Auditor Pemantauan
+                    </h4>
+                    <div class="flex items-center gap-2">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">PILIH KAWASAN / ITEM:</label>
+                        <select id="monitoringGroupSelect" onchange="handleMonitoringGroupSelect()" class="px-2.5 py-1 text-xs font-bold bg-slate-50 border border-slate-300 rounded-lg text-indigo-900">
+                            <option value="ALL">Semua Kawasan / Kumpulan</option>
+                            <option value="STAMPING — PC COIL DELIVERY">STAMPING — PC COIL DELIVERY</option>
+                            <option value="STAMPING — PC STORAGE">STAMPING — PC STORAGE</option>
+                            <option value="BA1 — PC RECEIVING">BA1 — PC RECEIVING</option>
+                            <option value="BA1 — PC SUPPLY">BA1 — PC SUPPLY</option>
+                            <option value="BA1 — PC RECEIVING & SUPPLY VX11">BA1 — PC RECEIVING & SUPPLY VX11</option>
+                            <option value="BA2 — PC RECEIVING & SUPPLY">BA2 — PC RECEIVING & SUPPLY</option>
+                            <option value="PAINTING — PC SPARE PART">PAINTING — PC SPARE PART</option>
+                            <option value="TF1 — PC TRIM & CHASSIS">TF1 — PC TRIM & CHASSIS</option>
+                            <option value="TF1 — PC FINAL">TF1 — PC FINAL</option>
+                            <option value="TF1 — PC ORDERING & HVI">TF1 — PC ORDERING & HVI</option>
+                            <option value="TF1 — PC INTERNAL SYNCHRO">TF1 — PC INTERNAL SYNCHRO</option>
+                            <option value="TF1 — PC RECEIVING TFN">TF1 — PC RECEIVING TFN</option>
+                            <option value="TF1 — PC RECEIVING TFW & TFS">TF1 — PC RECEIVING TFW & TFS</option>
+                            <option value="TF2 — PC STORAGE & ORDERING">TF2 — PC STORAGE & ORDERING</option>
+                            <option value="TF2 — PC RECEIVING">TF2 — PC RECEIVING</option>
+                            <option value="TF2 — PC SPS">TF2 — PC SPS</option>
+                            <option value="TF2 — PC SUPPLY">TF2 — PC SUPPLY</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- ADMIN-ONLY: MASTER SUPERVISOR SEARCH & SELECT -->
+                <div id="admin-supervisor-selector-container" class="bg-indigo-50/70 p-3 rounded-lg border border-indigo-100 mb-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-indigo-900 uppercase">
+                            <i class="fa-solid fa-users-gear text-indigo-600 mr-1"></i> SELECT SUPERVISOR NAME (MASTER SUPERVISOR LIST) <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[10px] bg-indigo-200 text-indigo-800 font-semibold px-2 py-0.5 rounded">39 Official Records</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <select id="masterSupervisorDropdown" onchange="handleMasterSupervisorSelect()" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg font-bold text-slate-800 shadow-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="">-- Pilih / Cari Nama Supervisor (39 Rekod) --</option>
+                            </select>
+                        </div>
+                        <div class="text-[11px] text-slate-600 flex items-center italic">
+                            <i class="fa-solid fa-circle-info text-indigo-500 mr-1.5"></i> Selecting a supervisor automatically links Staff No, Designation, Assigned Group & Shift.
+                        </div>
+                    </div>
+                </div>
+                <!-- PROFILE FIELDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nama SV <span class="text-rose-500">*</span></label>
+                        <input type="text" id="svNameInput" placeholder="Nama Supervisor" readonly class="w-full px-2.5 py-1.5 text-xs bg-slate-100 border border-slate-300 rounded font-bold text-slate-700 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">No. Staf <span class="text-rose-500">*</span></label>
+                        <input type="text" id="svStaffNoInput" placeholder="Nombor Staf" readonly class="w-full px-2.5 py-1.5 text-xs bg-slate-100 border border-slate-300 rounded font-bold text-slate-700 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Supervisor Email</label>
+                        <input type="email" id="svEmailInput" placeholder="supervisor@proton.com" oninput="saveSvProfile()" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Jawatan <span class="text-rose-500">*</span></label>
+                        <input type="text" id="svDesignationInput" placeholder="Jawatan" readonly class="w-full px-2.5 py-1.5 text-xs bg-slate-100 border border-slate-300 rounded font-bold text-slate-700 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Shift <span class="text-rose-500">*</span></label>
+                        <select id="svShiftSelect" disabled class="w-full px-2.5 py-1.5 text-xs bg-slate-100 border border-slate-300 rounded font-bold text-slate-700 cursor-not-allowed">
+                            <option value="A">Shift A</option>
+                            <option value="B">Shift B</option>
+                            <option value="N">Shift N</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tarikh <span class="text-rose-500">*</span></label>
+                        <input type="date" id="inputAuditDate" oninput="saveSvProfile()" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nama Auditor <span class="text-rose-500">*</span></label>
+                        <input type="text" id="inputAuditorName" value="Encik Ahmad SCM Auditor" oninput="saveSvProfile()" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded font-semibold text-indigo-900">
+                    </div>
+                </div>
+            </div>
+            <!-- MONITORING BOARD TABLE -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-100 border-b flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-table-cells text-indigo-600"></i> Monitoring Board (13 Standard Elements)
+                    </h3>
+                    <span class="text-[11px] text-slate-500 font-medium">Standard Monitoring Assessment</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[950px]" id="matrixTable">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase border-b">
+                                <th class="p-1 text-center">No</th>
+                                <th class="p-1.5">Kawasan</th>
+                                <th class="p-1.5">Nama Item Proses SCM</th>
+                                <th class="p-0.5 text-center">KPI</th>
+                                <th class="p-0.5 text-center">Act</th>
+                                <th class="p-0.5 text-center">Org</th>
+                                <th class="p-0.5 text-center">Zone</th>
+                                <th class="p-0.5 text-center">Safe</th>
+                                <th class="p-0.5 text-center">Def</th>
+                                <th class="p-0.5 text-center">Down</th>
+                                <th class="p-0.5 text-center">Cost</th>
+                                <th class="p-0.5 text-center">Kaiz</th>
+                                <th class="p-0.5 text-center">Opr</th>
+                                <th class="p-0.5 text-center">Yama</th>
+                                <th class="p-0.5 text-center">Emp</th>
+                                <th class="p-0.5 text-center">Skil</th>
+                                <th class="p-1 text-center">Progres</th>
+                                <th class="p-2 w-72">Remark Manual & Improvement Image Upload</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- AUTONOMOUS MAINTENANCE (AM) BOARD SECTION -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden space-y-3">
+                <div class="px-4 py-3 bg-slate-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-gears text-emerald-400"></i> Autonomous Maintenance (AM) Board Assessment
+                        </h3>
+                        <p class="text-[10px] text-slate-300">Independent AM Board Assessment, Scoring, Individual Image Uploads & Remarks</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="am-status-badge" class="px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-slate-800 text-slate-300 border border-slate-700">
+                            N/A – Pending Verification
+                        </span>
+                        <div id="admin-am-confirm-wrap" class="hidden flex items-center gap-1">
+                            <button type="button" onclick="setAmBoardAvailability(true)" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded">Confirm AM Available</button>
+                            <button type="button" onclick="setAmBoardAvailability(false)" class="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold rounded">Confirm No AM</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="am-board-content-area" class="p-4 space-y-4">
+                    <!-- 1. AM Board Assessment Table (HORIZONTAL ROW LAYOUT - 7 ELEMENTS) -->
+                    <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left border-collapse text-xs min-w-[850px]">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-bold uppercase border-b text-center">
+                                    <th class="p-2 border-r bg-slate-200/80">1. Organization</th>
+                                    <th class="p-2 border-r bg-slate-200/80">2. Activity</th>
+                                    <th class="p-2 border-r bg-slate-200/80">3. Schedule</th>
+                                    <th class="p-2 border-r bg-slate-200/80">4. Standard Diagram</th>
+                                    <th class="p-2 border-r bg-slate-200/80">5. Fuguai Summary</th>
+                                    <th class="p-2 border-r bg-slate-200/80">6. Audit Activities</th>
+                                    <th class="p-2 bg-slate-200/80">7. Fuguai Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="amHorizontalRow" class="text-center divide-x divide-slate-200"></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- 2. INDIVIDUAL IMAGE UPLOADS FOR AM ELEMENTS MARKED 0 -->
+                    <div id="amElementUploadsContainer" class="space-y-3"></div>
+                    <!-- 3. INDEPENDENT AM BOARD SCORE -->
+                    <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Independent AM Board Score</span>
+                            <div class="flex items-baseline gap-2 mt-1">
+                                <h4 id="am-score-val" class="text-2xl font-black text-slate-800">N/A</h4>
+                                <span id="am-score-percent" class="text-xs font-bold text-slate-500">(-)</span>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 text-right max-w-xs">*AM Board score is independent and does not penalize or alter the standard Monitoring score.</p>
+                    </div>
+                    <!-- 4. AM BOARD REMARKS & FINDINGS (AT THE VERY END) -->
+                    <div class="space-y-2 pt-2 border-t border-slate-200">
+                        <label class="block text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-comment-dots text-indigo-600"></i> AM BOARD REMARKS & FINDINGS
+                        </label>
+                        <textarea id="amRemarkInput" rows="3" placeholder="Masukkan sebarang ulasan, dapatan audit atau syor penambahbaikan AM Board..." oninput="saveAmBoardRemark()" class="w-full p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end no-print pt-2">
+                <button type="button" onclick="saveAuditRecord()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Rekod Pemantauan & AM Board
+                </button>
+            </div>
+        </div>
+        <!-- PAGE 3: REKOD AUDIT -->
+        <div id="page-records" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-clipboard-list text-indigo-600 mr-2"></i>Rekod & Sejarah Audit SCM</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs min-w-[650px]">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 font-bold uppercase border-b">
+                                <th class="p-3">ID Rekod</th>
+                                <th class="p-3">Tarikh</th>
+                                <th class="p-3">Auditor</th>
+                                <th class="p-3">Supervisor</th>
+                                <th class="p-3">Kawasan & Item SCM</th>
+                                <th class="p-3 text-center">Progres</th>
+                                <th class="p-3 text-center">AM Score</th>
+                                <th class="p-3">Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditRecordsTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- PAGE 4: ALERTS / NOTIFICATIONS -->
+        <div id="page-alerts" class="space-y-6 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-bell text-amber-600 mr-2"></i>Senarai Tindakan Penambahbaikan & Notifications</h3>
+                <div id="notificationsListContainer" class="space-y-3"></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-2"></i>7-Day Reminder & Countdown</h3>
+                <div id="alertsGroupedContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+        <!-- PAGE 5: EMAIL NOTIFICATION SETTINGS (ADMIN ONLY) -->
+        <div id="page-email-settings" class="space-y-6 hidden">
+            <div class="bg-indigo-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-envelope-gear text-emerald-400"></i> Email Notification Settings
+                    </h2>
+                    <p class="text-xs text-indigo-200 mt-1">Manage event triggers, view execution status, and audit log history for email notifications.</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="text-sm font-bold text-slate-800 uppercase border-b pb-2">
+                    <i class="fa-solid fa-sliders text-indigo-600 mr-2"></i>Notification Triggers
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800">Audit Submitted</span>
+                            <input type="checkbox" id="trig-submitted" checked class="w-4 h-4 text-indigo-600 rounded">
+                        </div>
+                        <p class="text-[11px] text-slate-500">Automatically trigger backend email notification when a new audit record is successfully saved.</p>
+                    </div>
+                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800">Audit Updated</span>
+                            <input type="checkbox" id="trig-updated" checked class="w-4 h-4 text-indigo-600 rounded">
+                        </div>
+                        <p class="text-[11px] text-slate-500">Trigger backend email notification when audit record details are modified or updated.</p>
+                    </div>
+                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800">Follow-up Required</span>
+                            <input type="checkbox" id="trig-followup" checked class="w-4 h-4 text-indigo-600 rounded">
+                        </div>
+                        <p class="text-[11px] text-slate-500">Trigger notification when non-compliance items (score 0) require supervisor action.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="text-sm font-bold text-slate-800 uppercase border-b pb-2">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-600 mr-2"></i>Email Delivery History & Logs
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs min-w-[700px]">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold uppercase border-b">
+                                <th class="p-3">Audit Reference</th>
+                                <th class="p-3">Recipient</th>
+                                <th class="p-3">Event Type</th>
+                                <th class="p-3">Group / Unit</th>
+                                <th class="p-3">Date & Time</th>
+                                <th class="p-3 text-center">Delivery Status</th>
+                                <th class="p-3">Error Details</th>
+                                <th class="p-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emailLogsTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- PDF TEMPLATE (PRINT / DOWNLOAD) -->
+    <div id="pdf-single-report-template" style="position: absolute; left: -9999px; top: 0; width: 210mm; background: #ffffff; padding: 15mm; color: #000000; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box;">
+        <div style="border-bottom: 2px solid #1e293b; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h1 style="font-size: 13pt; font-weight: bold; margin: 0; text-transform: uppercase; color: #0f172a;">PC VISUAL BOARD MONITORING SYSTEM (SCM)</h1>
+                <h2 style="font-size: 9.5pt; font-weight: bold; margin: 4px 0 0 0; color: #3730a3; text-transform: uppercase;">AUDIT SCORE SUMMARY REPORT</h2>
+            </div>
+            <div style="text-align: right; font-size: 8pt; color: #64748b;">
+                <p style="margin: 0;"><strong>Tarikh Dijana:</strong> <span id="pdf-generated-date">-</span></p>
+            </div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 12px; background-color: #f8fafc; border: 1px solid #cbd5e1;">
+            <tr>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1; width: 18%; font-weight: bold; color: #334155;">Kumpulan / Unit:</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;" id="pdf-group-name" colspan="3">-</td>
+            </tr>
+            <tr>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155;">Item Proses SCM:</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" id="pdf-scm-item-name" colspan="3">-</td>
+            </tr>
+            <tr>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155;">Nama Auditor:</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" id="pdf-auditor-name">-</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155; width: 18%;">Tarikh Audit:</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" id="pdf-audit-date">-</td>
+            </tr>
+            <tr>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155;">Supervisor:</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" id="pdf-sv-name">-</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155;">No. Staf / Shift:</td>
+                <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><span id="pdf-sv-staff">-</span> / <span id="pdf-sv-shift">A</span></td>
+            </tr>
+        </table>
+        
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">
+                SCORE SUMMARY TABLE
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1px solid #cbd5e1;">
+                <thead>
+                    <tr style="background-color: #f1f5f9; color: #334155; font-weight: bold;">
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 7%; text-align: center;">Bil.</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 28%; text-align: left;">Element Category</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; text-align: left;">Topics / Elements</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 20%; text-align: center;">Score / Level</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 18%; text-align: center;">Category Score</th>
+                    </tr>
+                </thead>
+                <tbody id="pdf-table-c-body"></tbody>
+            </table>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">
+                OVERALL SCORE
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; text-align: center; border: 1px solid #cbd5e1;">
+                <thead>
+                    <tr style="background-color: #f1f5f9; color: #334155; font-weight: bold;">
+                        <td style="padding: 5px; border: 1px solid #cbd5e1;">Overall Score</td>
+                        <td style="padding: 5px; border: 1px solid #cbd5e1;">Overall Percentage</td>
+                        <td style="padding: 5px; border: 1px solid #cbd5e1;">Overall Level / Status</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 9.5pt;" id="pdf-stat-score">-</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 9.5pt; color: #3730a3;" id="pdf-stat-percentage">-</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 9pt;" id="pdf-stat-level">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- SECTION 4: AM BOARD RESULT SUMMARY -->
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">
+                AM BOARD RESULT SUMMARY
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 8pt; border: 1px solid #cbd5e1; margin-bottom: 6px;">
+                <thead>
+                    <tr style="background-color: #f1f5f9; color: #334155; font-weight: bold;">
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 7%; text-align: center;">Bil.</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; text-align: left;">AM Board Element</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 30%; text-align: center;">Assessment / Result</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 20%; text-align: center;">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="pdf-table-am-body"></tbody>
+            </table>
+            <!-- AM BOARD SCORE SUMMARY TABLE -->
+            <table style="width: 100%; border-collapse: collapse; font-size: 8pt; text-align: center; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                <thead>
+                    <tr style="background-color: #f1f5f9; color: #334155; font-weight: bold;">
+                        <td style="padding: 4px; border: 1px solid #cbd5e1; width: 25%;">Total Applicable Elements</td>
+                        <td style="padding: 4px; border: 1px solid #cbd5e1; width: 25%;">Total Score Obtained</td>
+                        <td style="padding: 4px; border: 1px solid #cbd5e1; width: 25%;">AM Board Percentage</td>
+                        <td style="padding: 4px; border: 1px solid #cbd5e1; width: 25%;">AM Board Overall Status</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #cbd5e1; font-weight: bold;" id="pdf-am-stat-applicable">-</td>
+                        <td style="padding: 5px; border: 1px solid #cbd5e1; font-weight: bold;" id="pdf-am-stat-score">-</td>
+                        <td style="padding: 5px; border: 1px solid #cbd5e1; font-weight: bold; color: #047857;" id="pdf-am-stat-percentage">-</td>
+                        <td style="padding: 5px; border: 1px solid #cbd5e1; font-weight: bold;" id="pdf-am-stat-status">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-bottom: 16px;">
+            <div style="font-size: 9pt; font-weight: bold; color: #1e293b; text-transform: uppercase; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">
+                ISSUES SUMMARY REPORT
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; border: 1px solid #cbd5e1;">
+                <thead>
+                    <tr style="background-color: #f1f5f9; color: #334155; font-weight: bold;">
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 6%; text-align: center;">Bil.</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 32%; text-align: left;">Issue / Problem Description</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; text-align: left;">Action / Improvement Required</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 22%; text-align: left;">PIC</th>
+                        <th style="padding: 5px; border: 1px solid #cbd5e1; width: 18%; text-align: center;">Submission Status</th>
+                    </tr>
+                </thead>
+                <tbody id="pdf-table-d-body"></tbody>
+            </table>
+        </div>
+    </div>
+    <!-- JAVASCRIPT ENGINE -->
+    <script>
+        // MASTER SUPERVISOR DATABASE (39 RECORDS)
+        const MASTER_SUPERVISOR_DATABASE = [
+            { no: 1, staffNo: "19802", name: "Ramdza Azahari Bin Madzalan", group: "PC BA1 - Receiving & Supply (VX11)", position: "Supervisor I", shift: "NORMAL", mappedGroup: "BA1", mappedItem: "PC RECEIVING & SUPPLY VX11" },
+            { no: 2, staffNo: "18297", name: "Mohd Zaki Bin Mamat", group: "PC BA1 - Receiving A", position: "Supervisor I", shift: "A", mappedGroup: "BA1", mappedItem: "PC RECEIVING" },
+            { no: 3, staffNo: "15633", name: "Suhaili Bin Abd Latif", group: "PC BA1 - Supply A", position: "Supervisor I", shift: "A", mappedGroup: "BA1", mappedItem: "PC SUPPLY" },
+            { no: 4, staffNo: "2031", name: "Hasanuddin bin Komari", group: "PC BA2 - Receiving & Supply A", position: "Supervisor I", shift: "A", mappedGroup: "BA2", mappedItem: "PC RECEIVING & SUPPLY" },
+            { no: 5, staffNo: "7758", name: "Norafandi bin Samsudin", group: "PC BA1 - Receiving B", position: "Supervisor I", shift: "B", mappedGroup: "BA1", mappedItem: "PC RECEIVING" },
+            { no: 6, staffNo: "1386", name: "Samsuri bin Mardipin", group: "PC BA1 - Supply B", position: "Supervisor I", shift: "B", mappedGroup: "BA1", mappedItem: "PC SUPPLY" },
+            { no: 7, staffNo: "19647", name: "Rusman Bin Idris", group: "PC BA2 - Special Project", position: "Supervisor I", shift: "NORMAL", mappedGroup: "BA2", mappedItem: "PC RECEIVING & SUPPLY" },
+            { no: 8, staffNo: "15622", name: "Mohd Nasir Bin Abdul Rashid", group: "PC BA2 - Receiving and Supply B", position: "Supervisor I", shift: "B", mappedGroup: "BA2", mappedItem: "PC RECEIVING & SUPPLY" },
+            { no: 9, staffNo: "22102", name: "Mohamad Azizul Bin Mohamed Rakhazali", group: "PC Stamping - Coil & Delivery", position: "Supervisor I", shift: "NORMAL", mappedGroup: "STAMPING", mappedItem: "PC COIL DELIVERY" },
+            { no: 10, staffNo: "15772", name: "Abdul Halim Bin Abdullah", group: "PC Stamping - Storage A", position: "Supervisor I", shift: "A", mappedGroup: "STAMPING", mappedItem: "PC STORAGE" },
+            { no: 11, staffNo: "15244", name: "Mohd Nazri Bin Mohd Nawi @ Hassan", group: "PC Stamping - Storage B", position: "Supervisor I", shift: "B", mappedGroup: "STAMPING", mappedItem: "PC STORAGE" },
+            { no: 12, staffNo: "15612", name: "Muhammad Faizal Bin Jamaluddin", group: "PC Spare Part", position: "Supervisor I", shift: "NORMAL", mappedGroup: "PAINTING", mappedItem: "PC SPARE PART" },
+            { no: 13, staffNo: "3348", name: "Shaharudin Bin Abu Zahid", group: "PC Pallet Management", position: "Supervisor I", shift: "NORMAL", mappedGroup: "BA1", mappedItem: "PC RECEIVING" },
+            { no: 14, staffNo: "27066", name: "Ramzai Bin Othman", group: "PC Reject Part Management", position: "Supervisor I", shift: "NORMAL", mappedGroup: "BA2", mappedItem: "PC RECEIVING & SUPPLY" },
+            { no: 15, staffNo: "15640", name: "Azari Bin Arshad", group: "PC DTS & Scrap", position: "Supervisor I", shift: "NORMAL", mappedGroup: "TF1", mappedItem: "PC FINAL" },
+            { no: 16, staffNo: "15589", name: "Mohd Jaafar Bin Abdul Karim", group: "PC TF1 ORDERING A", position: "Supervisor I", shift: "A", mappedGroup: "TF1", mappedItem: "PC ORDERING & HVI" },
+            { no: 17, staffNo: "19216", name: "Mohd Sauffi Bin Mohd Yusop", group: "PC TF1 FINAL SMALL PART A", position: "Team Leader", shift: "A", mappedGroup: "TF1", mappedItem: "PC FINAL" },
+            { no: 18, staffNo: "15636", name: "Mohammad Fadzli Bin Ismail", group: "PC TF1 FINAL SMALL PART A", position: "Supervisor II", shift: "A", mappedGroup: "TF1", mappedItem: "PC FINAL" },
+            { no: 19, staffNo: "15301", name: "Feris Azlan Bin Nafiah", group: "PC TF1 INTERNAL SYNCHRO & BIG PART A", position: "Team Leader", shift: "A", mappedGroup: "TF1", mappedItem: "PC INTERNAL SYNCHRO" },
+            { no: 20, staffNo: "22124", name: "Hishamuddin Bin Mat Noor", group: "PC TF1 RECEIVING N A", position: "Supervisor I", shift: "A", mappedGroup: "TF1", mappedItem: "PC RECEIVING TFN" },
+            { no: 21, staffNo: "15663", name: "Bakhtiar Bin Abdullah", group: "PC TF1 BIG PART RECEIVING W/S A", position: "Supervisor I", shift: "A", mappedGroup: "TF1", mappedItem: "PC RECEIVING TFW & TFS" },
+            { no: 22, staffNo: "2679", name: "Heirillazi bin Mat Nayan", group: "PC TF1 ORDERING B", position: "Supervisor I", shift: "B", mappedGroup: "TF1", mappedItem: "PC ORDERING & HVI" },
+            { no: 23, staffNo: "5736", name: "Sharudin bin Abd Ghani", group: "PC TF1 FINAL SMALL PART B", position: "Supervisor I", shift: "B", mappedGroup: "TF1", mappedItem: "PC FINAL" },
+            { no: 24, staffNo: "10195", name: "Baharom bin Bakar", group: "PC TF1 RECEIVING N B", position: "Supervisor I", shift: "B", mappedGroup: "TF1", mappedItem: "PC RECEIVING TFN" },
+            { no: 25, staffNo: "6809", name: "Raffi Jussri bin Abdul Rahman", group: "PC TF1 RECEIVING W/S B", position: "Supervisor I", shift: "B", mappedGroup: "TF1", mappedItem: "PC RECEIVING TFW & TFS" },
+            { no: 26, staffNo: "15413", name: "Mohd Fairuz Bin Mohd Halim", group: "PC TF2 - Direct Final & Chassis A", position: "Supervisor I", shift: "A", mappedGroup: "TF2", mappedItem: "PC SUPPLY" },
+            { no: 27, staffNo: "8207", name: "Kama Nazrul Bin Che Bebakar", group: "PC TF2 - Ordering A", position: "Supervisor I", shift: "A", mappedGroup: "TF2", mappedItem: "PC STORAGE & ORDERING" },
+            { no: 28, staffNo: "15781", name: "Mior Mahadzir Bin Mior", group: "PC TF2 - Receiving TFN/TFE A", position: "Supervisor I", shift: "A", mappedGroup: "TF2", mappedItem: "PC RECEIVING" },
+            { no: 29, staffNo: "15671", name: "Abdul Hafiz Bin Ramli", group: "PC TF2 - SPS Trim Final A", position: "Supervisor I", shift: "A", mappedGroup: "TF2", mappedItem: "PC SPS" },
+            { no: 30, staffNo: "884", name: "Resiesparan a/l kuppusamy", group: "PC TF2 - Direct Final & Chassis B", position: "Supervisor I", shift: "B", mappedGroup: "TF2", mappedItem: "PC SUPPLY" },
+            { no: 31, staffNo: "6030", name: "Mohd Shukeri bin Idris", group: "PC TF2 - Direct Final & Chassis B", position: "Supervisor I", shift: "B", mappedGroup: "TF2", mappedItem: "PC SUPPLY" },
+            { no: 32, staffNo: "15619", name: "Adnan Bin Harun", group: "PC TF2 - Ordering B", position: "Supervisor I", shift: "B", mappedGroup: "TF2", mappedItem: "PC STORAGE & ORDERING" },
+            { no: 33, staffNo: "15603", name: "Saiful Husni Bin Alias", group: "PC TF2 - Receiving TFN/TFE B", position: "Supervisor I", shift: "B", mappedGroup: "TF2", mappedItem: "PC RECEIVING" },
+            { no: 34, staffNo: "19773", name: "Mohd Khairul Amri Bin Inchik Ani", group: "PC TF2 - SPS Trim Final B", position: "Supervisor I", shift: "B", mappedGroup: "TF2", mappedItem: "PC SPS" },
+            { no: 35, staffNo: "15812", name: "Mohlis Bin Bandi", group: "PC TF2 - Storage & Small Part B", position: "Supervisor I", shift: "B", mappedGroup: "TF2", mappedItem: "PC STORAGE & ORDERING" },
+            { no: 36, staffNo: "6409", name: "Izaham bin Hashim", group: "PC NEV (ORDERING / RECEIVING / SMALL PART) A", position: "Supervisor I", shift: "A", mappedGroup: "TF1", mappedItem: "PC TRIM & CHASSIS" },
+            { no: 37, staffNo: "3624", name: "Riduan Bin Lamid", group: "PC NEV (CHS / ENG SUB / FINAL / DOOR / TRIM / IP) A", position: "Supervisor I", shift: "A", mappedGroup: "TF1", mappedItem: "PC TRIM & CHASSIS" },
+            { no: 38, staffNo: "19194", name: "Mohd Ridzuwan Bin Ramli", group: "PC NEV (CHS / ENG SUB / FINAL / DOOR / TRIM / IP) B", position: "Supervisor I", shift: "B", mappedGroup: "TF1", mappedItem: "PC TRIM & CHASSIS" },
+            { no: 39, staffNo: "2680", name: "Norazlan bin Hassan", group: "PC NEV BODY TRANSFER B", position: "Supervisor I", shift: "B", mappedGroup: "TF1", mappedItem: "PC TRIM & CHASSIS" }
+        ];
+        // SYSTEM USERS & CREDENTIALS
+        const systemUsers = {
+            "admin": { role: "ADMIN", group: "ALL", label: "SEMUA KUMPULAN", pass: "123456" },
+            "MK27": { role: "SUPERVISOR", group: "STAMPING", itemName: "PC COIL DELIVERY", label: "STAMPING — PC COIL DELIVERY", pass: "123456" },
+            "RA64": { role: "SUPERVISOR", group: "STAMPING", itemName: "PC STORAGE", label: "STAMPING — PC STORAGE", pass: "123456" },
+            "ZU38": { role: "SUPERVISOR", group: "BA1", itemName: "PC RECEIVING", label: "BA1 — PC RECEIVING", pass: "123456" },
+            "KE51": { role: "SUPERVISOR", group: "BA1", itemName: "PC SUPPLY", label: "BA1 — PC SUPPLY", pass: "123456" },
+            "TO83": { role: "SUPERVISOR", group: "BA1", itemName: "PC RECEIVING & SUPPLY VX11", label: "BA1 — PC RECEIVING & SUPPLY VX11", pass: "123456" },
+            "FI26": { role: "SUPERVISOR", group: "BA2", itemName: "PC RECEIVING & SUPPLY", label: "BA2 — PC RECEIVING & SUPPLY", pass: "123456" },
+            "WA49": { role: "SUPERVISOR", group: "PAINTING", itemName: "PC SPARE PART", label: "PAINTING — PC SPARE PART", pass: "123456" },
+            "JO72": { role: "SUPERVISOR", group: "TF1", itemName: "PC TRIM & CHASSIS", label: "TF1 — PC TRIM & CHASSIS", pass: "123456" },
+            "CY35": { role: "SUPERVISOR", group: "TF1", itemName: "PC FINAL", label: "TF1 — PC FINAL", pass: "123456" },
+            "BE68": { role: "SUPERVISOR", group: "TF1", itemName: "PC ORDERING & HVI", label: "TF1 — PC ORDERING & HVI", pass: "123456" },
+            "LU24": { role: "SUPERVISOR", group: "TF1", itemName: "PC INTERNAL SYNCHRO", label: "TF1 — PC INTERNAL SYNCHRO", pass: "123456" },
+            "SA57": { role: "SUPERVISOR", group: "TF1", itemName: "PC RECEIVING TFN", label: "TF1 — PC RECEIVING TFN", pass: "123456" },
+            "NI91": { role: "SUPERVISOR", group: "TF1", itemName: "PC RECEIVING TFW & TFS", label: "TF1 — PC RECEIVING TFW & TFS", pass: "123456" },
+            "DO43": { role: "SUPERVISOR", group: "TF2", itemName: "PC STORAGE & ORDERING", label: "TF2 — PC STORAGE & ORDERING", pass: "123456" },
+            "HE86": { role: "SUPERVISOR", group: "TF2", itemName: "PC RECEIVING", label: "TF2 — PC RECEIVING", pass: "123456" },
+            "VO32": { role: "SUPERVISOR", group: "TF2", itemName: "PC SPS", label: "TF2 — PC SPS", pass: "123456" },
+            "GI75": { role: "SUPERVISOR", group: "TF2", itemName: "PC SUPPLY", label: "TF2 — PC SUPPLY", pass: "123456" }
+        };
+        const amBoardElements = [
+            { id: 1, name: "Organization", desc: "AM organization chart and responsibilities clearly displayed" },
+            { id: 2, name: "Activity", desc: "AM activity plans, 5S standards, and cleaning/lubrication logs" },
+            { id: 3, name: "Schedule", desc: "AM periodic maintenance schedule and execution status" },
+            { id: 4, name: "Standard Diagram", desc: "Machine/line standard diagrams and operational standards" },
+            { id: 5, name: "Fuguai Summary", desc: "Summary list of identified abnormalities (Fuguai)" },
+            { id: 6, name: "Audit Activities", desc: "Internal AM audit records, scores, and countermeasure plans" },
+            { id: 7, name: "Fuguai Status", desc: "Closure status and tracking of resolved abnormalities" }
+        ];
+        const defaultInitialData = [
+            { no: 1, group: 'STAMPING', name: 'PC COIL DELIVERY', checked: true, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: Array(7).fill(1), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 2, group: 'STAMPING', name: 'PC STORAGE', checked: true, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: Array(7).fill(1), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 3, group: 'BA1', name: 'PC RECEIVING', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 4, group: 'BA1', name: 'PC SUPPLY', checked: false, boards: [1,1,1,1,1,0,1,1,1,0,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 5, group: 'BA1', name: 'PC RECEIVING & SUPPLY VX11', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 6, group: 'BA2', name: 'PC RECEIVING & SUPPLY', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 7, group: 'PAINTING', name: 'PC SPARE PART', checked: false, boards: [1,1,1,1,1,1,0,0,0,0,0,0,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,0,1,0,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 8, group: 'TF1', name: 'PC TRIM & CHASSIS', checked: false, boards: [1,1,1,1,1,1,0,0,0,0,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 9, group: 'TF1', name: 'PC FINAL', checked: false, boards: [0,0,0,0,0,0,1,1,1,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,0,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 10, group: 'TF1', name: 'PC ORDERING & HVI', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 11, group: 'TF1', name: 'PC INTERNAL SYNCHRO', checked: false, boards: [0,0,0,0,0,1,1,1,0,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 12, group: 'TF1', name: 'PC RECEIVING TFN', checked: false, boards: [1,1,1,1,1,1,1,1,0,0,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 13, group: 'TF1', name: 'PC RECEIVING TFW & TFS', checked: false, boards: [0,0,0,1,1,1,1,1,0,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 14, group: 'TF2', name: 'PC STORAGE & ORDERING', checked: false, boards: [0,0,0,1,1,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,0,1,1,0,0,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 15, group: 'TF2', name: 'PC RECEIVING', checked: false, boards: [0,0,0,1,0,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 16, group: 'TF2', name: 'PC SPS', checked: false, boards: [0,0,0,0,0,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 17, group: 'TF2', name: 'PC SUPPLY', checked: false, boards: [0,0,0,1,1,1,0,0,0,0,0,0,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' }
+        ];
+        window.currentData = JSON.parse(JSON.stringify(defaultInitialData));
+        window.auditRecords = [];
+        window.emailLogs = [];
+        window.supervisorProfiles = {};
+        window.activeGroupFilter = 'ALL';
+        window.activeItemNameFilter = null;
+        const boardNames = ['KPI', 'Act Plan', 'Org', 'Zoning', 'Safety', 'Defect', 'Downtime', 'Cost', 'Kaizen', 'Opr', 'Yamazumi', 'Emp Perf', 'Skill'];
+        const elementCategories = [
+            'Performance Management', 'Performance Management', 'Visual Control', 'Visual Control', 
+            'Safety & Health', 'Quality Control', 'Operation Efficiency', 'Cost Control', 
+            'Continuous Improvement', 'Standardization', 'Work Balancing', 'Manpower Management', 'Skill Development'
+        ];
+        const categoryBadgeColors = [
+            'bg-blue-100 text-blue-800 border-blue-300',
+            'bg-indigo-100 text-indigo-800 border-indigo-300',
+            'bg-purple-100 text-purple-800 border-purple-300',
+            'bg-emerald-100 text-emerald-800 border-emerald-300',
+            'bg-amber-100 text-amber-800 border-amber-300'
+        ];
+        function isValidEmail(email) {
+            if (!email) return false;
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email.trim());
+        }
+        function getActiveSupervisorKey() {
+            const filtered = getFilteredData();
+            if (filtered && filtered.length > 0) {
+                return `${filtered[0].group} — ${filtered[0].name}`;
+            }
+            return 'ALL';
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                populateMasterSupervisorDropdown();
+                const todayStr = new Date().toISOString().split('T')[0];
+                const dateInput = document.getElementById('inputAuditDate');
+                if (dateInput && !dateInput.value) dateInput.value = todayStr;
+                const headerDate = document.getElementById('header-audit-date');
+                if (headerDate) headerDate.innerText = todayStr;
+                const isLoggedIn = localStorage.getItem('sc_logged_in');
+                if (isLoggedIn === 'true') {
+                    const loginPage = document.getElementById('login-page');
+                    if (loginPage) loginPage.classList.add('hidden');
+                    applyRoleAccessRestrictions();
+                    initDashboardComponents();
+                } else {
+                    const loginPage = document.getElementById('login-page');
+                    if (loginPage) loginPage.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Initialization Error:", err);
+            }
+        });
+        function populateMasterSupervisorDropdown() {
+            const select = document.getElementById('masterSupervisorDropdown');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Pilih / Cari Nama Supervisor (39 Rekod) --</option>';
+            MASTER_SUPERVISOR_DATABASE.forEach(sup => {
+                const opt = document.createElement('option');
+                opt.value = sup.staffNo;
+                opt.textContent = `${sup.no}. [${sup.staffNo}] ${sup.name} - ${sup.group} (${sup.position})`;
+                select.appendChild(opt);
+            });
+        }
+        function handleMasterSupervisorSelect() {
+            const dropdown = document.getElementById('masterSupervisorDropdown');
+            if (!dropdown) return;
+            const staffNo = dropdown.value;
+            if (!staffNo) return;
+            const supRecord = MASTER_SUPERVISOR_DATABASE.find(s => s.staffNo === staffNo);
+            if (!supRecord) return;
+            document.getElementById('svNameInput').value = supRecord.name;
+            document.getElementById('svStaffNoInput').value = supRecord.staffNo;
+            document.getElementById('svDesignationInput').value = supRecord.position;
+            let mappedShift = supRecord.shift === 'NORMAL' ? 'N' : supRecord.shift;
+            document.getElementById('svShiftSelect').value = mappedShift;
+            const targetCombined = `${supRecord.mappedGroup} — ${supRecord.mappedItem}`;
+            const monSelect = document.getElementById('monitoringGroupSelect');
+            if (monSelect) {
+                monSelect.value = targetCombined;
+                handleMonitoringGroupSelect();
+            }
+            saveSvProfile();
+        }
+        function switchLoginTab(type) {
+            const adminForm = document.getElementById('form-login-admin');
+            const supForm = document.getElementById('form-login-supervisor');
+            const adminBtn = document.getElementById('tab-login-admin');
+            const supBtn = document.getElementById('tab-login-supervisor');
+            if (type === 'admin') {
+                if (adminForm) adminForm.classList.remove('hidden');
+                if (supForm) supForm.classList.add('hidden');
+                if (adminBtn) adminBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow transition";
+                if (supBtn) supBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition";
+            } else {
+                if (supForm) supForm.classList.remove('hidden');
+                if (adminForm) adminForm.classList.add('hidden');
+                if (supBtn) supBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-700 text-white shadow transition";
+                if (adminBtn) adminBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition";
+            }
+        }
+        function handleAdminLogin(e) {
+            if (e) e.preventDefault();
+            const user = document.getElementById('adminUsername').value.trim();
+            const pass = document.getElementById('adminPassword').value.trim();
+            if (user === 'admin' && pass === systemUsers['admin'].pass) {
+                localStorage.setItem('sc_logged_in', 'true');
+                localStorage.setItem('sc_user_role', 'ADMIN');
+                localStorage.setItem('sc_user_group', 'ALL');
+                localStorage.setItem('sc_user_item', 'ALL');
+                localStorage.setItem('sc_user_id', 'admin');
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('adminErrorMsg').classList.add('hidden');
+                applyRoleAccessRestrictions();
+                initDashboardComponents();
+            } else {
+                document.getElementById('adminErrorMsg').classList.remove('hidden');
+            }
+        }
+        function handleSupervisorLogin(e) {
+            if (e) e.preventDefault();
+            const user = document.getElementById('supUsername').value.trim().toUpperCase();
+            const pass = document.getElementById('supPassword').value.trim();
+            if (systemUsers[user] && systemUsers[user].role === 'SUPERVISOR' && pass === systemUsers[user].pass) {
+                const userInfo = systemUsers[user];
+                localStorage.setItem('sc_logged_in', 'true');
+                localStorage.setItem('sc_user_role', userInfo.role);
+                localStorage.setItem('sc_user_group', userInfo.group);
+                localStorage.setItem('sc_user_item', userInfo.itemName);
+                localStorage.setItem('sc_user_id', user);
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('supErrorMsg').classList.add('hidden');
+                applyRoleAccessRestrictions();
+                initDashboardComponents();
+                checkAndShowSupervisorPopup();
+            } else {
+                document.getElementById('supErrorMsg').classList.remove('hidden');
+            }
+        }
+        function applyRoleAccessRestrictions() {
+            const role = localStorage.getItem('sc_user_role');
+            const assignedGroup = localStorage.getItem('sc_user_group');
+            const assignedItem = localStorage.getItem('sc_user_item');
+            const csvBtn = document.getElementById('btn-export-csv');
+            const emailTabBtn = document.getElementById('nav-btn-email-settings');
+            const headerUnit = document.getElementById('header-assigned-unit');
+            const body = document.getElementById('main-body');
+            const adminSupContainer = document.getElementById('admin-supervisor-selector-container');
+            const adminAmConfirmWrap = document.getElementById('admin-am-confirm-wrap');
+            if (role === 'SUPERVISOR') {
+                body.classList.add('theme-supervisor');
+                if (csvBtn) csvBtn.classList.add('hidden');
+                if (emailTabBtn) emailTabBtn.classList.add('hidden');
+                if (adminSupContainer) adminSupContainer.classList.add('hidden');
+                if (adminAmConfirmWrap) adminAmConfirmWrap.classList.add('hidden');
+                const dashSelect = document.getElementById('dashGroupDropdown');
+                const monSelect = document.getElementById('monitoringGroupSelect');
+                const combinedVal = `${assignedGroup} — ${assignedItem}`;
+                if (dashSelect) { dashSelect.value = combinedVal; dashSelect.disabled = true; }
+                if (monSelect) { monSelect.value = combinedVal; monSelect.disabled = true; }
+                window.activeGroupFilter = assignedGroup;
+                window.activeItemNameFilter = assignedItem;
+                if (headerUnit) headerUnit.innerText = combinedVal;
+                const matchedSup = MASTER_SUPERVISOR_DATABASE.find(s => s.mappedGroup === assignedGroup && s.mappedItem === assignedItem);
+                if (matchedSup) {
+                    document.getElementById('svNameInput').value = matchedSup.name;
+                    document.getElementById('svStaffNoInput').value = matchedSup.staffNo;
+                    document.getElementById('svDesignationInput').value = matchedSup.position;
+                    let mShift = matchedSup.shift === 'NORMAL' ? 'N' : matchedSup.shift;
+                    document.getElementById('svShiftSelect').value = mShift;
+                }
+            } else {
+                body.classList.remove('theme-supervisor');
+                if (csvBtn) csvBtn.classList.remove('hidden');
+                if (emailTabBtn) emailTabBtn.classList.remove('hidden');
+                if (adminSupContainer) adminSupContainer.classList.remove('hidden');
+                if (adminAmConfirmWrap) adminAmConfirmWrap.classList.remove('hidden');
+                const dashSelect = document.getElementById('dashGroupDropdown');
+                const monSelect = document.getElementById('monitoringGroupSelect');
+                if (dashSelect) dashSelect.disabled = false;
+                if (monSelect) monSelect.disabled = false;
+                window.activeGroupFilter = 'ALL';
+                window.activeItemNameFilter = null;
+                if (headerUnit) headerUnit.innerText = "SEMUA KUMPULAN (ADMIN)";
+            }
+        }
+        function handleLogout() {
+            localStorage.removeItem('sc_logged_in');
+            localStorage.removeItem('sc_user_role');
+            localStorage.removeItem('sc_user_group');
+            localStorage.removeItem('sc_user_item');
+            localStorage.removeItem('sc_user_id');
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('supUsername').value = '';
+            document.getElementById('supPassword').value = '';
+            document.getElementById('login-page').classList.remove('hidden');
+        }
+        function initDashboardComponents() {
+            loadLocalData();
+            loadCurrentSvProfileToForm();
+            renderTable();
+            renderAmBoard();
+            updateSummaryCards();
+            initCharts();
+            renderDashboardGroupedReminders();
+            renderAuditRecordsTable();
+            updateNotificationsBadgeAndList();
+            renderAuditSummaryView();
+            renderEmailLogsTable();
+            switchPage('summary');
+        }
+        function loadLocalData() {
+            const saved = localStorage.getItem('proton_scm_audit_data');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.data) {
+                        window.currentData = parsed.data.map(item => {
+                            if (!item.elementImages) item.elementImages = Array(13).fill(null);
+                            if (item.genbaImages === undefined) item.genbaImages = null;
+                            if (item.amHasBoard === undefined) item.amHasBoard = true;
+                            if (!item.amBoards) item.amBoards = Array(7).fill(1);
+                            if (!item.amElementImages) item.amElementImages = Array(7).fill(null);
+                            if (item.amRemark === undefined) item.amRemark = '';
+                            return item;
+                        });
+                    }
+                    if (parsed.auditor) document.getElementById('inputAuditorName').value = parsed.auditor;
+                    if (parsed.date) {
+                        document.getElementById('inputAuditDate').value = parsed.date;
+                        document.getElementById('header-audit-date').innerText = parsed.date;
+                    }
+                    if (parsed.records) window.auditRecords = parsed.records;
+                    if (parsed.emailLogs) window.emailLogs = parsed.emailLogs;
+                    if (parsed.supervisorProfiles) window.supervisorProfiles = parsed.supervisorProfiles;
+                } catch(e) { console.error(e); }
+            }
+        }
+        function loadCurrentSvProfileToForm() {
+            const key = getActiveSupervisorKey();
+            const prof = window.supervisorProfiles[key] || {};
+            if (prof.name) document.getElementById('svNameInput').value = prof.name;
+            if (prof.staffNo) document.getElementById('svStaffNoInput').value = prof.staffNo;
+            document.getElementById('svEmailInput').value = prof.email || '';
+            if (prof.designation) document.getElementById('svDesignationInput').value = prof.designation;
+            if (prof.shift) document.getElementById('svShiftSelect').value = prof.shift;
+        }
+        function saveSvProfile() {
+            const auditDate = document.getElementById('inputAuditDate').value || new Date().toISOString().split('T')[0];
+            document.getElementById('header-audit-date').innerText = auditDate;
+            const key = getActiveSupervisorKey();
+            window.supervisorProfiles[key] = {
+                name: document.getElementById('svNameInput').value,
+                staffNo: document.getElementById('svStaffNoInput').value,
+                email: document.getElementById('svEmailInput').value,
+                designation: document.getElementById('svDesignationInput').value,
+                shift: document.getElementById('svShiftSelect').value
+            };
+            const payload = {
+                supervisorProfiles: window.supervisorProfiles,
+                auditor: document.getElementById('inputAuditorName').value,
+                date: auditDate,
+                data: window.currentData,
+                records: window.auditRecords,
+                emailLogs: window.emailLogs
+            };
+            localStorage.setItem('proton_scm_audit_data', JSON.stringify(payload));
+            updateNotificationsBadgeAndList();
+            renderAuditSummaryView();
+        }
+        function handleGenbaPhotographicEvidenceUpload(realIndex, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                window.currentData[realIndex].genbaImages = e.target.result;
+                saveSvProfile();
+                renderTable();
+                alert("Gambar bukti Genba Admin/Auditor berjaya dimuat naik & disahkan.");
+            };
+            reader.readAsDataURL(file);
+        }
+        function confirmClearView() {
+            const modal = document.getElementById('clear-confirm-modal');
+            if (modal) modal.classList.remove('modal-hidden');
+        }
+        function closeClearModal() {
+            const modal = document.getElementById('clear-confirm-modal');
+            if (modal) modal.classList.add('modal-hidden');
+        }
+        function executeClearMonitoringForm() {
+            closeClearModal();
+            const filtered = getFilteredData();
+            filtered.forEach(item => {
+                const realIndex = window.currentData.findIndex(d => d.no === item.no && d.name === item.name && d.group === item.group);
+                if (realIndex !== -1) {
+                    window.currentData[realIndex].boards = Array(13).fill(1);
+                    window.currentData[realIndex].remarks = Array(13).fill('');
+                    window.currentData[realIndex].elementImages = Array(13).fill(null);
+                    window.currentData[realIndex].genbaImages = null;
+                    window.currentData[realIndex].amBoards = Array(7).fill(1);
+                    window.currentData[realIndex].amElementImages = Array(7).fill(null);
+                    window.currentData[realIndex].amRemark = '';
+                }
+            });
+            document.getElementById('inputAuditDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('inputAuditorName').value = 'Encik Ahmad SCM Auditor';
+            renderTable();
+            renderAmBoard();
+            updateSummaryCards();
+            updateCharts();
+            renderDashboardGroupedReminders();
+            updateNotificationsBadgeAndList();
+            renderAuditSummaryView();
+            switchPage('monitoring');
+            alert("Borang pemantauan berjaya dikosongkan.");
+        }
+        function switchPage(page) {
+            const role = localStorage.getItem('sc_user_role');
+            if (role === 'SUPERVISOR' && page === 'email-settings') {
+                alert("Akses ditolak. Email Settings terhad kepada Admin sahaja.");
+                return;
+            }
+            ['summary', 'dashboard', 'monitoring', 'records', 'alerts', 'email-settings'].forEach(p => {
+                const el = document.getElementById(`page-${p}`);
+                const btn = document.getElementById(`nav-btn-${p}`);
+                if (el) el.classList.add('hidden');
+                if (btn) btn.className = 'px-3 py-1.5 text-xs font-bold rounded-md text-indigo-200 hover:text-white transition';
+            });
+            const targetEl = document.getElementById(`page-${page}`);
+            const targetBtn = document.getElementById(`nav-btn-${page}`);
+            if (targetEl) targetEl.classList.remove('hidden');
+            if (targetBtn) targetBtn.className = 'px-3 py-1.5 text-xs font-bold rounded-md bg-white text-indigo-900 shadow transition';
+            if (page === 'summary') renderAuditSummaryView();
+            if (page === 'dashboard') updateCharts();
+            if (page === 'records') renderAuditRecordsTable();
+            if (page === 'alerts') {
+                renderDashboardGroupedReminders();
+                updateNotificationsBadgeAndList();
+            }
+            if (page === 'email-settings') renderEmailLogsTable();
+        }
+        function getFilteredData() {
+            const role = localStorage.getItem('sc_user_role');
+            if (role === 'SUPERVISOR') {
+                const grp = localStorage.getItem('sc_user_group');
+                const itm = localStorage.getItem('sc_user_item');
+                return window.currentData.filter(item => item.group === grp && item.name === itm);
+            } else {
+                if (window.activeGroupFilter === 'ALL') {
+                    return window.currentData;
+                } else if (window.activeGroupFilter && window.activeGroupFilter.includes(' — ')) {
+                    const parts = window.activeGroupFilter.split(' — ');
+                    const grp = parts[0];
+                    const itm = parts.slice(1).join(' — ');
+                    return window.currentData.filter(item => item.group === grp && item.name === itm);
+                } else {
+                    return window.currentData.filter(item => item.group === window.activeGroupFilter);
+                }
+            }
+        }
+        function handleDashGroupFilter() {
+            if (localStorage.getItem('sc_user_role') === 'SUPERVISOR') return;
+            const val = document.getElementById('dashGroupDropdown').value;
+            window.activeGroupFilter = val;
+            const monSelect = document.getElementById('monitoringGroupSelect');
+            if (monSelect) monSelect.value = val;
+            loadCurrentSvProfileToForm();
+            renderTable();
+            renderAmBoard();
+            updateSummaryCards();
+            updateCharts();
+            renderDashboardGroupedReminders();
+            renderAuditSummaryView();
+        }
+        function handleMonitoringGroupSelect() {
+            if (localStorage.getItem('sc_user_role') === 'SUPERVISOR') return;
+            const val = document.getElementById('monitoringGroupSelect').value;
+            window.activeGroupFilter = val;
+            const dashSelect = document.getElementById('dashGroupDropdown');
+            if (dashSelect) dashSelect.value = val;
+            loadCurrentSvProfileToForm();
+            renderTable();
+            renderAmBoard();
+            updateSummaryCards();
+            updateCharts();
+            renderDashboardGroupedReminders();
+            renderAuditSummaryView();
+        }
+        function renderAuditSummaryView() {
+            const filtered = getFilteredData();
+            if (!filtered || filtered.length === 0) return;
+            const currentItem = filtered[0];
+            const groupNameLabel = window.activeGroupFilter === 'ALL' ? 'SEMUA KUMPULAN' : `${currentItem.group} — ${currentItem.name}`;
+            const auditorName = document.getElementById('inputAuditorName').value || 'Encik Ahmad SCM Auditor';
+            const svName = document.getElementById('svNameInput').value || 'N/A';
+            const auditDate = document.getElementById('inputAuditDate').value || new Date().toISOString().split('T')[0];
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('sum-display-group').innerText = groupNameLabel;
+            document.getElementById('sum-display-auditor').innerText = auditorName;
+            document.getElementById('sum-display-supervisor').innerText = svName;
+            document.getElementById('sum-display-auditdate').innerText = auditDate;
+            document.getElementById('sum-display-gendate').innerText = todayStr;
+            let totalEvaluated = 0;
+            let sumScore = 0;
+            const catMap = {};
+            currentItem.boards.forEach((scoreVal, bIdx) => {
+                totalEvaluated++;
+                sumScore += scoreVal;
+                const catName = elementCategories[bIdx];
+                if (!catMap[catName]) catMap[catName] = { total: 0, obtained: 0 };
+                catMap[catName].total += 1;
+                catMap[catName].obtained += scoreVal;
+            });
+            const summaryTbody = document.getElementById('summaryElementsTableBody');
+            if (summaryTbody) {
+                summaryTbody.innerHTML = '';
+                let counter = 0;
+                currentItem.boards.forEach((scoreVal, bIdx) => {
+                    counter++;
+                    const elementName = boardNames[bIdx];
+                    const catName = elementCategories[bIdx];
+                    const colorClass = categoryBadgeColors[bIdx % categoryBadgeColors.length];
+                    let scoreBadge = scoreVal === 1 
+                        ? '<span class="px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-xs">Cemerlang</span>' 
+                        : '<span class="px-2.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold text-xs">Gagal</span>';
+                    const catData = catMap[catName];
+                    const catScoreStr = `${catData.obtained} / ${catData.total} (${((catData.obtained/catData.total)*100).toFixed(0)}%)`;
+                    summaryTbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b">
+                            <td class="py-3 px-3 text-center font-bold text-slate-500 align-middle">${counter}</td>
+                            <td class="py-3 px-4 align-middle"><span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold border ${colorClass} max-w-full break-words">${catName}</span></td>
+                            <td class="py-3 px-4 font-semibold text-slate-800 align-middle">${elementName}</td>
+                            <td class="py-3 px-4 text-center align-middle">${scoreBadge}</td>
+                            <td class="py-3 px-4 text-center font-bold text-slate-700 align-middle">${catScoreStr}</td>
+                        </tr>
+                    `;
+                });
+            }
+            const overallPct = totalEvaluated > 0 ? (sumScore / totalEvaluated) * 100 : 0;
+            document.getElementById('overall-score-val').innerText = `${sumScore} / ${totalEvaluated}`;
+            document.getElementById('overall-percent-val').innerText = `${overallPct.toFixed(1)}%`;
+            const levelValEl = document.getElementById('overall-level-val');
+            if (levelValEl) {
+                if (overallPct >= 80) {
+                    levelValEl.innerText = 'Cemerlang';
+                    levelValEl.className = 'text-xs font-black px-3 py-1 rounded mt-1 bg-emerald-600 text-white uppercase inline-block';
+                } else if (overallPct >= 50) {
+                    levelValEl.innerText = 'Lulus';
+                    levelValEl.className = 'text-xs font-black px-3 py-1 rounded mt-1 bg-amber-600 text-white uppercase inline-block';
+                } else {
+                    levelValEl.innerText = 'Gagal';
+                    levelValEl.className = 'text-xs font-black px-3 py-1 rounded mt-1 bg-rose-600 text-white uppercase inline-block';
+                }
+            }
+            const issuesTbody = document.getElementById('summaryIssuesTableBody');
+            if (issuesTbody) {
+                issuesTbody.innerHTML = '';
+                let issueCount = 0;
+                currentItem.boards.forEach((val, bIdx) => {
+                    if (val === 0) {
+                        issueCount++;
+                        const boardName = boardNames[bIdx];
+                        const remarkText = (currentItem.remarks && currentItem.remarks[bIdx]) ? currentItem.remarks[bIdx] : 'Tiada butiran remark.';
+                        const picName = svName !== 'N/A' ? svName : 'Supervisor Bertugas';
+                        const elementImgSaved = (currentItem.elementImages && currentItem.elementImages[bIdx]) ? currentItem.elementImages[bIdx] : null;
+                        const isSubmitted = elementImgSaved !== null;
+                        let statusBadge = isSubmitted 
+                            ? `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold rounded-md text-[10px]"><i class="fa-solid fa-circle-check mr-1"></i>IMAGE UPLOADED</span>`
+                            : `<span class="px-2.5 py-1 bg-rose-100 text-rose-800 border border-rose-300 font-bold rounded-md text-[10px]"><i class="fa-solid fa-circle-xmark mr-1"></i>PENDING UPLOAD</span>`;
+                        issuesTbody.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition border-b">
+                                <td class="p-3 text-center font-bold text-slate-500">${issueCount}</td>
+                                <td class="p-3 font-bold text-slate-900">${currentItem.group} — ${currentItem.name} <br><span class="text-rose-600 text-[11px] font-semibold">[Elemen: ${boardName}]</span></td>
+                                <td class="p-3 text-slate-700">${remarkText}</td>
+                                <td class="p-3 font-semibold text-slate-700">${picName}</td>
+                                <td class="p-3 text-center">${statusBadge}</td>
+                            </tr>
+                        `;
+                    }
+                });
+                if (issueCount === 0) {
+                    issuesTbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-emerald-600 font-bold bg-emerald-50/50"><i class="fa-solid fa-circle-check text-lg mr-1"></i> Tiada sebarang isu direkodkan bagi kumpulan/unit ini.</td></tr>`;
+                }
+            }
+        }
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const filtered = getFilteredData();
+            const role = localStorage.getItem('sc_user_role');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="18" class="text-center py-6 text-rose-500 font-semibold">Tiada kumpulan di bawah seliaan ID anda.</td></tr>`;
+                return;
+            }
+            filtered.forEach((item) => {
+                const realIndex = window.currentData.findIndex(d => d.no === item.no && d.name === item.name && d.group === item.group);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-50 border-b';
+                let rowHTML = `<td class="p-1.5 text-center font-semibold text-slate-500">${item.no}</td><td class="p-1.5 font-semibold text-indigo-900">${item.group}</td><td class="p-1.5 font-semibold text-slate-900">${item.name}</td>`;
+                item.boards.forEach((val, bIdx) => {
+                    if (role === 'SUPERVISOR') {
+                        rowHTML += `<td class="p-0.5 text-center"><span class="inline-block w-8 py-0.5 text-[10px] text-center font-bold rounded border ${val === 1 ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-rose-50 text-rose-700 border-rose-300'}">${val}</span></td>`;
+                    } else {
+                        rowHTML += `<td class="p-0.5 text-center"><select onchange="updateBoardStatus(${realIndex}, ${bIdx}, this.value)" class="w-8 py-0.5 text-[10px] text-center font-bold rounded border ${val === 1 ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-rose-50 text-rose-700 border-rose-300'}"><option value="1" ${val === 1 ? 'selected' : ''}>1</option><option value="0" ${val === 0 ? 'selected' : ''}>0</option></select></td>`;
+                    }
+                });
+                const count1 = item.boards.filter(v => v === 1).length;
+                const progressPct = (count1 / 13) * 100;
+                let zeroRemarksHTML = `<div class="space-y-2">`;
+                let zeroCount = 0;
+                item.boards.forEach((val, bIdx) => {
+                    if (val === 0) {
+                        zeroCount++;
+                        const boardName = boardNames[bIdx];
+                        const currentRemark = (item.remarks && item.remarks[bIdx]) ? item.remarks[bIdx] : '';
+                        const supervisorImg = (item.elementImages && item.elementImages[bIdx]) ? item.elementImages[bIdx] : null;
+                        const hasSupImg = supervisorImg !== null;
+                        const genbaImg = item.genbaImages || null;
+                        const hasGenbaImg = genbaImg !== null;
+
+                        zeroRemarksHTML += `
+                            <div class="p-2.5 bg-amber-50/80 rounded-lg border border-amber-200 text-[10px] space-y-2">
+                                <div class="flex items-center justify-between border-b border-amber-200/60 pb-1">
+                                    <span class="font-bold text-rose-700"><i class="fa-solid fa-triangle-exclamation mr-1"></i>[Elemen: ${boardName}]</span>
+                                    ${hasSupImg ? `
+                                        <span class="font-bold px-1.5 py-0.5 rounded text-[9px] bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                            <i class="fa-solid fa-check-circle mr-0.5"></i>IMAGE UPLOADED
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="block font-bold text-slate-700">Auditor's Remark:</span>
+                                    ${role === 'SUPERVISOR' 
+                                        ? `<p class="text-slate-800 font-semibold bg-white p-1.5 rounded border border-slate-200">${currentRemark || 'Tiada catatan audit daripada Auditor.'}</p>` 
+                                        : `<input type="text" value="${currentRemark}" placeholder="Masukkan ulasan / catatan audit..." oninput="updateBoardRemark(${realIndex}, ${bIdx}, this.value)" class="w-full px-2 py-1 bg-white border border-slate-300 rounded text-[10px]">`
+                                    }
+                                </div>
+                                ${role === 'ADMIN' ? `
+                                    <div class="p-2 bg-indigo-50/80 rounded border border-indigo-200 space-y-1.5 mt-2">
+                                        <span class="block font-bold text-indigo-900 uppercase text-[9px]"><i class="fa-solid fa-camera mr-1"></i>GENBA PHOTOGRAPHIC EVIDENCE (ADMIN / AUDITOR):</span>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
+                                                <i class="fa-solid fa-upload"></i> Choose File / Upload Genba Photo
+                                                <input type="file" accept="image/*" onchange="handleGenbaPhotographicEvidenceUpload(${realIndex}, event)" class="hidden">
+                                            </label>
+                                            ${hasGenbaImg ? `<img src="${genbaImg}" alt="Genba Evidence Preview" class="h-8 w-12 object-cover rounded border border-indigo-300 shadow-sm">` : '<span class="text-slate-400 italic text-[9px]">Belum ada gambar Genba</span>'}
+                                        </div>
+                                    </div>
+                                    ${hasSupImg ? `
+                                        <div class="p-2 bg-emerald-50 rounded border border-emerald-200 space-y-1">
+                                            <span class="block font-bold text-emerald-900 text-[9px] uppercase"><i class="fa-solid fa-eye mr-1"></i>SUPERVISOR IMPROVEMENT EVIDENCE:</span>
+                                            <img src="${supervisorImg}" alt="Supervisor Evidence Preview" class="h-10 w-16 object-cover rounded border border-emerald-300 shadow-sm">
+                                        </div>
+                                    ` : ''}
+                                ` : ''}
+                                ${role === 'SUPERVISOR' ? `
+                                    <div class="p-2 bg-white rounded border border-slate-200 space-y-1.5">
+                                        <span class="block font-bold text-emerald-800 uppercase"><i class="fa-solid fa-camera mr-1"></i>SUPERVISOR IMPROVEMENT EVIDENCE:</span>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
+                                                <i class="fa-solid fa-upload"></i> ${hasSupImg ? 'Tukar Gambar' : 'Choose File / Upload'}
+                                                <input type="file" accept="image/*" onchange="handleElementImageUpload(${realIndex}, ${bIdx}, event)" class="hidden">
+                                            </label>
+                                            ${hasSupImg ? `<img src="${supervisorImg}" alt="Supervisor Evidence Preview" class="h-8 w-12 object-cover rounded border border-emerald-300 shadow-sm">` : '<span class="text-slate-400 italic text-[9px]">Belum ada gambar muat naik</span>'}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                if (zeroCount === 0) {
+                    zeroRemarksHTML += `<span class="text-[10px] font-bold text-emerald-600 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Semua elemen mematuhi piawaian (13/13).</span>`;
+                }
+                zeroRemarksHTML += `</div>`;
+                rowHTML += `<td class="p-1.5 text-center font-bold text-indigo-600">${progressPct.toFixed(0)}%</td><td class="p-1.5">${zeroRemarksHTML}</td>`;
+                row.innerHTML = rowHTML;
+                tbody.appendChild(row);
+            });
+        }
+        function handleElementImageUpload(itemIdx, boardIdx, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (!window.currentData[itemIdx].elementImages) window.currentData[itemIdx].elementImages = Array(13).fill(null);
+                window.currentData[itemIdx].elementImages[boardIdx] = e.target.result;
+                saveSvProfile();
+                renderTable();
+                updateNotificationsBadgeAndList();
+                renderAuditSummaryView();
+                alert("Gambar bukti penambahbaikan Supervisor berjaya dimuat naik & disahkan.");
+            };
+            reader.readAsDataURL(file);
+        }
+        function renderAmBoard() {
+            const horizontalRow = document.getElementById('amHorizontalRow');
+            const statusBadge = document.getElementById('am-status-badge');
+            const amScoreVal = document.getElementById('am-score-val');
+            const amScorePercent = document.getElementById('am-score-percent');
+            const amRemarkInput = document.getElementById('amRemarkInput');
+            const amElementUploadsContainer = document.getElementById('amElementUploadsContainer');
+            if (!horizontalRow) return;
+            horizontalRow.innerHTML = '';
+            if (amElementUploadsContainer) amElementUploadsContainer.innerHTML = '';
+            const filtered = getFilteredData();
+            if (filtered.length === 0) return;
+            const currentItem = filtered[0];
+            const role = localStorage.getItem('sc_user_role');
+            const realIndex = window.currentData.findIndex(d => d.no === currentItem.no && d.name === currentItem.name && d.group === currentItem.group);
+            if (currentItem.amHasBoard === false) {
+                if (statusBadge) {
+                    statusBadge.innerText = 'Confirmed: No AM Board (N/A)';
+                    statusBadge.className = 'px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-slate-200 text-slate-700 border border-slate-300';
+                }
+                if (amScoreVal) amScoreVal.innerText = 'N/A';
+                if (amScorePercent) amScorePercent.innerText = '(Excluded from scoring)';
+                if (amRemarkInput) {
+                    amRemarkInput.value = 'N/A - Unit ini tidak terikat dengan keperluan Autonomous Maintenance (AM) Board.';
+                    amRemarkInput.disabled = true;
+                }
+                horizontalRow.innerHTML = `<td colspan="7" class="py-4 font-bold text-slate-500 bg-slate-50 text-center">This group/unit is confirmed NOT to have an Autonomous Maintenance (AM) Board. Assessment is not required.</td>`;
+                return;
+            }
+            if (statusBadge) {
+                statusBadge.innerText = 'AM Board Active & Evaluated';
+                statusBadge.className = 'px-2.5 py-1 rounded text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300';
+            }
+            if (amRemarkInput) {
+                amRemarkInput.disabled = false;
+                amRemarkInput.value = currentItem.amRemark || '';
+            }
+            let obtainedScore = 0;
+            let applicableElements = 0;
+            let zeroElementsList = [];
+            amBoardElements.forEach((elem, idx) => {
+                const currentVal = currentItem.amBoards[idx];
+                if (currentVal === 1) { 
+                    obtainedScore += 1; 
+                    applicableElements += 1; 
+                } else if (currentVal === 0) { 
+                    applicableElements += 1; 
+                    zeroElementsList.push({ elem, idx });
+                }
+                const cell = document.createElement('td');
+                cell.className = 'p-2.5 align-top bg-white';
+                let selectHTML = '';
+                if (role === 'SUPERVISOR') {
+                    selectHTML = `<span class="inline-block px-2 py-1 rounded font-bold text-[11px] ${currentVal === 1 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : currentVal === 0 ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}">${currentVal === 1 ? '1 = Yes' : currentVal === 0 ? '0 = No' : 'N/A'}</span>`;
+                } else {
+                    selectHTML = `
+                        <select onchange="updateAmElementStatus(${realIndex}, ${idx}, this.value)" class="w-full px-2 py-1 text-xs font-bold rounded border bg-slate-50 border-slate-300 focus:ring-1 focus:ring-indigo-500">
+                            <option value="1" ${currentVal === 1 ? 'selected' : ''}>1 = Available / Yes</option>
+                            <option value="0" ${currentVal === 0 ? 'selected' : ''}>0 = Not Available / No</option>
+                            <option value="N/A" ${currentVal === 'N/A' ? 'selected' : ''}>N/A = Not Applicable</option>
+                        </select>
+                    `;
+                }
+                cell.innerHTML = `
+                    <div class="space-y-1.5">
+                        <div class="text-[11px] text-slate-500 font-semibold">${elem.desc}</div>
+                        <div>${selectHTML}</div>
+                    </div>
+                `;
+                horizontalRow.appendChild(cell);
+            });
+            // INDIVIDUAL IMAGE UPLOADS FOR AM BOARD ELEMENTS MARKED 0
+            if (zeroElementsList.length > 0 && amElementUploadsContainer) {
+                let uploadsHTML = `<div class="p-3 bg-amber-50/70 border border-amber-200 rounded-lg space-y-3">
+                    <p class="text-xs font-bold text-amber-900 uppercase flex items-center gap-1.5 border-b border-amber-200/80 pb-2">
+                        <i class="fa-solid fa-camera text-amber-600"></i> AM BOARD IMPROVEMENT EVIDENCE UPLOADS (REQUIRED FOR 0 / NOT AVAILABLE ELEMENTS)
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+                zeroElementsList.forEach(item => {
+                    const e = item.elem;
+                    const idx = item.idx;
+                    const savedSupImg = (currentItem.amElementImages && currentItem.amElementImages[idx]) ? currentItem.amElementImages[idx] : null;
+                    uploadsHTML += `
+                        <div class="p-2.5 bg-white border border-slate-200 rounded-lg space-y-2">
+                            <div class="flex items-center justify-between border-b pb-1">
+                                <span class="text-xs font-bold text-slate-800"><i class="fa-solid fa-circle-exclamation text-rose-500 mr-1"></i>${e.id}. ${e.name}</span>
+                                ${savedSupImg ? `
+                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        IMAGE UPLOADED
+                                    </span>
+                                ` : ''}
+                            </div>
+                            ${role === 'ADMIN' ? `
+                                <div class="p-2 bg-indigo-50/80 rounded border border-indigo-200 space-y-1.5 text-[10px]">
+                                    <span class="font-bold text-indigo-900 uppercase"><i class="fa-solid fa-camera mr-1"></i>Genba Photographic Evidence:</span>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <label class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
+                                            <i class="fa-solid fa-upload"></i> Choose File / Upload Genba Photo
+                                            <input type="file" accept="image/*" onchange="handleAmElementImageUpload(${realIndex}, ${idx}, event)" class="hidden">
+                                        </label>
+                                        ${savedSupImg ? `<img src="${savedSupImg}" alt="${e.name} Evidence" class="h-8 w-12 object-cover rounded border border-indigo-300 shadow-sm shrink-0">` : '<span class="text-slate-400 italic text-[9px]">Belum ada gambar Genba</span>'}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${role === 'SUPERVISOR' ? `
+                                <div class="space-y-1">
+                                    <span class="block font-bold text-emerald-800 text-[10px] uppercase">SUPERVISOR IMPROVEMENT EVIDENCE:</span>
+                                    <div class="flex items-center gap-3">
+                                        <input type="file" accept="image/*" onchange="handleAmElementImageUpload(${realIndex}, ${idx}, event)" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-bold file:bg-emerald-700 file:text-white hover:file:bg-emerald-600 cursor-pointer">
+                                        ${savedSupImg ? `<img src="${savedSupImg}" alt="${e.name} Evidence" class="h-10 w-14 rounded border border-emerald-300 object-cover shrink-0">` : '<span class="text-slate-400 italic text-[9px]">Tiada gambar</span>'}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                uploadsHTML += `</div></div>`;
+                amElementUploadsContainer.innerHTML = uploadsHTML;
+            }
+            if (applicableElements > 0) {
+                const amPct = ((obtainedScore / applicableElements) * 100).toFixed(1);
+                if (amScoreVal) amScoreVal.innerText = `${obtainedScore} / ${applicableElements}`;
+                if (amScorePercent) amScorePercent.innerText = `(${amPct}%)`;
+            } else {
+                if (amScoreVal) amScoreVal.innerText = 'N/A';
+                if (amScorePercent) amScorePercent.innerText = '(All elements N/A)';
+            }
+        }
+        function setAmBoardAvailability(isAvailable) {
+            const filtered = getFilteredData();
+            if (filtered.length === 0) return;
+            const realIndex = window.currentData.findIndex(d => d.no === filtered[0].no && d.name === filtered[0].name && d.group === filtered[0].group);
+            if (realIndex !== -1) {
+                window.currentData[realIndex].amHasBoard = isAvailable;
+                window.currentData[realIndex].amBoards = isAvailable ? Array(7).fill(1) : Array(7).fill('N/A');
+                saveSvProfile();
+                renderAmBoard();
+            }
+        }
+        function updateAmElementStatus(itemIdx, elemIdx, val) {
+            let parsed = val;
+            if (val === '1') parsed = 1;
+            if (val === '0') parsed = 0;
+            window.currentData[itemIdx].amBoards[elemIdx] = parsed;
+            saveSvProfile();
+            renderAmBoard();
+        }
+        function handleAmElementImageUpload(itemIdx, elemIdx, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (!window.currentData[itemIdx].amElementImages) window.currentData[itemIdx].amElementImages = Array(7).fill(null);
+                window.currentData[itemIdx].amElementImages[elemIdx] = e.target.result;
+                saveSvProfile();
+                renderAmBoard();
+                alert(`Gambar bukti bagi elemen AM "${amBoardElements[elemIdx].name}" berjaya dimuat naik.`);
+            };
+            reader.readAsDataURL(file);
+        }
+        function saveAmBoardRemark() {
+            const filtered = getFilteredData();
+            if (filtered.length === 0) return;
+            const realIndex = window.currentData.findIndex(d => d.no === filtered[0].no && d.name === filtered[0].name && d.group === filtered[0].group);
+            if (realIndex !== -1) {
+                const el = document.getElementById('amRemarkInput');
+                if (el) window.currentData[realIndex].amRemark = el.value;
+                saveSvProfile();
+            }
+        }
+        function updateBoardStatus(itemIdx, boardIdx, val) {
+            window.currentData[itemIdx].boards[boardIdx] = parseInt(val);
+            saveSvProfile();
+            renderTable();
+            updateSummaryCards();
+            renderDashboardGroupedReminders();
+        }
+        function updateBoardRemark(itemIdx, boardIdx, val) {
+            if (!window.currentData[itemIdx].remarks) window.currentData[itemIdx].remarks = Array(13).fill('');
+            window.currentData[itemIdx].remarks[boardIdx] = val;
+            saveSvProfile();
+        }
+        function updateSummaryCards() {
+            const filtered = getFilteredData();
+            const total = filtered.length;
+            let completed = 0;
+            let totalPct = 0;
+            filtered.forEach(item => {
+                const count1 = item.boards.filter(v => v === 1).length;
+                if (count1 === 13) completed++;
+                totalPct += (count1 / 13) * 100;
+            });
+            const avgProgress = total > 0 ? (totalPct / total).toFixed(1) : 0;
+            const inProgress = total - completed;
+            const tEl = document.getElementById('stat-total');
+            const pEl = document.getElementById('stat-avg-progress');
+            const cEl = document.getElementById('stat-completed');
+            const iEl = document.getElementById('stat-in-progress');
+            if (tEl) tEl.innerText = total;
+            if (pEl) pEl.innerText = `${avgProgress}%`;
+            if (cEl) cEl.innerText = completed;
+            if (iEl) iEl.innerText = inProgress;
+        }
+        function saveAuditRecord() {
+            const role = localStorage.getItem('sc_user_role');
+            const filtered = getFilteredData();
+            if (filtered.length === 0) return;
+            const svName = document.getElementById('svNameInput').value.trim();
+            const svStaffNo = document.getElementById('svStaffNoInput').value.trim();
+            const svEmail = document.getElementById('svEmailInput').value.trim();
+            const auditorName = document.getElementById('inputAuditorName').value.trim();
+            const auditDate = document.getElementById('inputAuditDate').value;
+            if (!svName || !svStaffNo || !auditorName || !auditDate) {
+                alert("MANDATORY FIELDS MISSING:\nSila pastikan Nama Supervisor, No. Staf, Nama Auditor dan Tarikh Audit telah diisi.");
+                return;
+            }
+            if (svEmail && !isValidEmail(svEmail)) {
+                alert("Format e-mel Supervisor tidak sah. Sila masukkan e-mel yang betul.");
+                return;
+            }
+            // PART 1 & PART 4: ADMIN GENBA PHOTOGRAPHIC EVIDENCE VALIDATION
+            if (role === 'ADMIN') {
+                const hasGenbaImg = filtered[0].genbaImages !== null && filtered[0].genbaImages !== undefined && filtered[0].genbaImages !== '';
+                if (!hasGenbaImg) {
+                    alert("WARNING: GENBA PHOTOGRAPHIC EVIDENCE IS REQUIRED BEFORE SAVING THIS AUDIT RECORD.\n\nSila muat naik Gambar Suasana / Keadaan Sebenar Genba di bahagian elemen bermasalah (Marked 0) sebelum menyimpan rekod audit ini.");
+                    return;
+                }
+            }
+            // PART 2 & PART 4: SUPERVISOR IMPROVEMENT EVIDENCE VALIDATION
+            if (role === 'SUPERVISOR') {
+                const missingElements = [];
+                // Check Monitoring Board Elements marked 0
+                filtered[0].boards.forEach((val, bIdx) => {
+                    if (val === 0) {
+                        const hasImg = filtered[0].elementImages && filtered[0].elementImages[bIdx];
+                        if (!hasImg) {
+                            missingElements.push(`Monitoring Board: ${boardNames[bIdx]}`);
+                        }
+                    }
+                });
+                // Check AM Board Elements marked 0
+                if (filtered[0].amHasBoard) {
+                    filtered[0].amBoards.forEach((val, eIdx) => {
+                        if (val === 0) {
+                            const hasAmImg = filtered[0].amElementImages && filtered[0].amElementImages[eIdx];
+                            if (!hasAmImg) {
+                                missingElements.push(`AM Board: ${amBoardElements[eIdx].name}`);
+                            }
+                        }
+                    });
+                }
+                if (missingElements.length > 0) {
+                    alert(`SUPERVISOR IMPROVEMENT EVIDENCE IS REQUIRED FOR THE FOLLOWING ELEMENTS:\n\n- ${missingElements.join('\n- ')}\n\nSila muat naik semua gambar bukti penambahbaikan yang diperlukan sebelum menyimpan.`);
+                    return;
+                }
+            }
+            const recordId = 'REC-' + Date.now().toString().slice(-6);
+            const itemLabel = filtered.length > 0 ? `${filtered[0].group} — ${filtered[0].name}` : 'Semua Unit';
+            let totalPct = 0;
+            filtered.forEach(i => {
+                totalPct += (i.boards.filter(v => v === 1).length / 13) * 100;
+            });
+            const avgProgress = filtered.length > 0 ? (totalPct / filtered.length).toFixed(0) + '%' : '0%';
+            let amScoreText = 'N/A';
+            if (filtered.length > 0 && filtered[0].amHasBoard) {
+                const obt = filtered[0].amBoards.filter(v => v === 1).length;
+                const app = filtered[0].amBoards.filter(v => v !== 'N/A').length;
+                if (app > 0) amScoreText = `${((obt/app)*100).toFixed(0)}%`;
+            }
+            const record = {
+                id: recordId,
+                date: auditDate,
+                auditor: auditorName,
+                supervisor: svName,
+                item: itemLabel,
+                progress: avgProgress,
+                amScore: amScoreText,
+                remark: 'Audit & AM Record Saved'
+            };
+            window.auditRecords.unshift(record);
+            const trigSubmitted = document.getElementById('trig-submitted');
+            if (trigSubmitted && trigSubmitted.checked) {
+                const logItem = {
+                    refNo: 'SCM-AUT-' + Math.floor(100000 + Math.random() * 900000),
+                    email: svEmail || 'Not Provided',
+                    event: 'Audit Submitted',
+                    group: itemLabel,
+                    time: new Date().toLocaleString('en-US'),
+                    status: 'Backend Disconnected',
+                    error: 'Record saved successfully. Live email not sent as backend service is not connected.'
+                };
+                window.emailLogs.unshift(logItem);
+            }
+            saveSvProfile();
+            renderAuditRecordsTable();
+            renderEmailLogsTable();
+            alert("Record Saved Successfully!\nRekod pemantauan dan AM Board telah berjaya disimpan.");
+        }
+        function renderAuditRecordsTable() {
+            const tbody = document.getElementById('auditRecordsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (window.auditRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-slate-400 font-semibold">Tiada rekod audit disimpan setakat ini.</td></tr>`;
+                return;
+            }
+            window.auditRecords.forEach(rec => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b">
+                        <td class="p-3 font-bold text-indigo-900">${rec.id}</td>
+                        <td class="p-3">${rec.date}</td>
+                        <td class="p-3 font-semibold">${rec.auditor}</td>
+                        <td class="p-3">${rec.supervisor}</td>
+                        <td class="p-3 font-bold">${rec.item}</td>
+                        <td class="p-3 text-center"><span class="px-2 py-1 bg-indigo-100 text-indigo-800 rounded font-bold">${rec.progress}</span></td>
+                        <td class="p-3 text-center"><span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded font-bold">${rec.amScore || 'N/A'}</span></td>
+                        <td class="p-3 text-slate-600">${rec.remark}</td>
+                    </tr>
+                `;
+            });
+        }
+        function updateNotificationsBadgeAndList() {
+            const badge = document.getElementById('nav-notification-badge');
+            const listContainer = document.getElementById('notificationsListContainer');
+            const filtered = getFilteredData();
+            let totalPending = 0;
+            let listHTML = '';
+            filtered.forEach(item => {
+                item.boards.forEach((val, bIdx) => {
+                    if (val === 0) {
+                        const hasImg = (item.elementImages && item.elementImages[bIdx]);
+                        if (!hasImg) totalPending++;
+                        const bName = boardNames[bIdx];
+                        const rmk = (item.remarks && item.remarks[bIdx]) ? item.remarks[bIdx] : 'Tiada catatan';
+                        listHTML += `
+                            <div class="p-3 rounded-lg border ${hasImg ? 'border-emerald-200 bg-emerald-50/50' : 'border-amber-200 bg-amber-50/50'} flex justify-between items-center text-xs">
+                                <div>
+                                    <span class="font-bold text-slate-900">${item.group} — ${item.name}</span>
+                                    <p class="text-rose-600 font-semibold mt-0.5">Elemen: ${bName} (Nilai: 0)</p>
+                                    <p class="text-slate-600 mt-0.5">Catatan: ${rmk}</p>
+                                </div>
+                                <span class="px-2.5 py-1 rounded font-bold text-[10px] ${hasImg ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                    ${hasImg ? 'IMAGE UPLOADED' : 'PENDING UPLOAD'}
+                                </span>
+                            </div>
+                        `;
+                    }
+                });
+            });
+            if (totalPending > 0) {
+                if (badge) { badge.innerText = totalPending; badge.classList.remove('hidden'); }
+                if (listContainer) listContainer.innerHTML = listHTML;
+            } else {
+                if (badge) badge.classList.add('hidden');
+                if (listContainer) listContainer.innerHTML = `<p class="text-xs text-emerald-600 font-bold text-center py-4 bg-emerald-50 rounded-lg">Semua tindakan penambahbaikan dan gambar bukti telah dilengkapkan.</p>`;
+            }
+        }
+        function checkAndShowSupervisorPopup() {
+            const filtered = getFilteredData();
+            let pendingCount = 0;
+            let contentHTML = '';
+            filtered.forEach(item => {
+                item.boards.forEach((val, bIdx) => {
+                    if (val === 0) {
+                        const hasImg = (item.elementImages && item.elementImages[bIdx]);
+                        if (!hasImg) {
+                            pendingCount++;
+                            contentHTML += `<div class="p-2 bg-amber-50 rounded border border-amber-200 text-slate-700"><strong>${item.name}</strong> - Elemen: <span class="text-rose-600 font-bold">${boardNames[bIdx]}</span> (Pending Upload)</div>`;
+                        }
+                    }
+                });
+            });
+            if (pendingCount > 0) {
+                const elContent = document.getElementById('supervisor-popup-content');
+                const elModal = document.getElementById('supervisor-popup-modal');
+                if (elContent) elContent.innerHTML = contentHTML;
+                if (elModal) elModal.classList.remove('modal-hidden');
+            }
+        }
+        function closeSupervisorPopup() {
+            const elModal = document.getElementById('supervisor-popup-modal');
+            if (elModal) elModal.classList.add('modal-hidden');
+        }
+        function goToMonitoringFromPopup() {
+            closeSupervisorPopup();
+            switchPage('monitoring');
+        }
+        let doughnutChartInst = null;
+        let barChartInst = null;
+        function initCharts() {
+            const ctxDoughnut = document.getElementById('statusDoughnutChart');
+            const ctxBar = document.getElementById('progressBarChart');
+            if (!ctxDoughnut || !ctxBar) return;
+            doughnutChartInst = new Chart(ctxDoughnut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lengkap (13/13)', 'Belum Lengkap'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#10b981', '#f59e0b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+            barChartInst = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Peratusan Kemajuan (%)',
+                        data: [],
+                        backgroundColor: '#4f46e5'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 100 } }
+                }
+            });
+            updateCharts();
+        }
+        function updateCharts() {
+            if (!doughnutChartInst || !barChartInst) return;
+            const filtered = getFilteredData();
+            let completed = 0;
+            let inProgress = 0;
+            const labels = [];
+            const pcts = [];
+            filtered.forEach(item => {
+                const count1 = item.boards.filter(v => v === 1).length;
+                const pct = ((count1 / 13) * 100).toFixed(0);
+                if (count1 === 13) completed++;
+                else inProgress++;
+                labels.push(item.name);
+                pcts.push(pct);
+            });
+            doughnutChartInst.data.datasets[0].data = [completed, inProgress];
+            doughnutChartInst.update();
+            barChartInst.data.labels = labels;
+            barChartInst.data.datasets[0].data = pcts;
+            barChartInst.update();
+        }
+        function renderDashboardGroupedReminders() {
+            const dashContainer = document.getElementById('dashboardGroupedContainer');
+            const alertContainer = document.getElementById('alertsGroupedContainer');
+            if (!dashContainer) return;
+            const filtered = getFilteredData();
+            let cardsHTML = '';
+            filtered.forEach(item => {
+                const count1 = item.boards.filter(v => v === 1).length;
+                const pct = ((count1 / 13) * 100).toFixed(0);
+                cardsHTML += `
+                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-indigo-900">${item.group} — ${item.name}</span>
+                            <span class="text-xs font-bold text-indigo-600">${pct}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div class="bg-indigo-600 h-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            dashContainer.innerHTML = cardsHTML;
+            if (alertContainer) alertContainer.innerHTML = cardsHTML;
+        }
+        function renderEmailLogsTable() {
+            const tbody = document.getElementById('emailLogsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (window.emailLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-slate-400 font-semibold">No email delivery history or logs recorded yet.</td></tr>`;
+                return;
+            }
+            window.emailLogs.forEach((log, index) => {
+                let statusBadge = `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded font-bold text-[10px]"><i class="fa-solid fa-plug-circle-xmark mr-1"></i>${log.status}</span>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b">
+                        <td class="p-3 font-bold text-indigo-900">${log.refNo}</td>
+                        <td class="p-3 font-semibold text-slate-700">${log.email || 'N/A'}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">${log.event}</span></td>
+                        <td class="p-3 font-medium">${log.group}</td>
+                        <td class="p-3 text-slate-500">${log.time}</td>
+                        <td class="p-3 text-center">${statusBadge}</td>
+                        <td class="p-3 text-slate-500 text-[11px]">${log.error || 'None'}</td>
+                        <td class="p-3 text-center">
+                            <button type="button" onclick="resendLogEmail(${index})" class="px-2.5 py-1 bg-indigo-900 hover:bg-indigo-800 text-white rounded font-bold text-[10px] shadow transition">
+                                <i class="fa-solid fa-rotate-right mr-1"></i>Resend
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        function resendLogEmail(logIndex) {
+            if (logIndex < 0 || logIndex >= window.emailLogs.length) return;
+            const log = window.emailLogs[logIndex];
+            log.time = new Date().toLocaleString('en-US');
+            log.status = 'Backend Disconnected';
+            log.error = 'Live backend email service is not configured yet. Delivery request logged locally.';
+            saveSvProfile();
+            renderEmailLogsTable();
+            alert(`Resend attempt logged for ${log.refNo}.\nStatus: Record Saved — Backend Disconnected`);
+        }
+        function printSystemPDF() {
+            window.print();
+        }
+        function generateSingleFullPDF() {
+            try {
+                if (typeof html2pdf === 'undefined') {
+                    alert("Ralat: Pustaka PDF tidak dapat dimuatkan. Sila semak sambungan internet anda.");
+                    return;
+                }
+                executePdfGeneration();
+            } catch (error) {
+                console.error("Ralat permulaan PDF:", error);
+                alert("Gagal memulakan proses penjanaan PDF.");
+            }
+        }
+        function executePdfGeneration() {
+            try {
+                const filtered = getFilteredData();
+                if (!filtered || filtered.length === 0) {
+                    alert("Tiada data untuk dijana.");
+                    return;
+                }
+                const currentItem = filtered[0];
+                const auditorName = document.getElementById('inputAuditorName').value || 'Encik Ahmad SCM Auditor';
+                const svName = document.getElementById('svNameInput').value || 'N/A';
+                const svStaff = document.getElementById('svStaffNoInput').value || 'N/A';
+                const svShift = document.getElementById('svShiftSelect').value || 'A';
+                const auditDate = document.getElementById('inputAuditDate').value || new Date().toISOString().split('T')[0];
+                const todayStr = new Date().toISOString().split('T')[0];
+                document.getElementById('pdf-generated-date').innerText = todayStr;
+                document.getElementById('pdf-group-name').innerText = currentItem.group;
+                document.getElementById('pdf-scm-item-name').innerText = currentItem.name;
+                document.getElementById('pdf-auditor-name').innerText = auditorName;
+                document.getElementById('pdf-audit-date').innerText = auditDate;
+                document.getElementById('pdf-sv-name').innerText = svName;
+                document.getElementById('pdf-sv-staff').innerText = svStaff;
+                document.getElementById('pdf-sv-shift').innerText = svShift;
+                let totalEvaluated = 0;
+                let sumScore = 0;
+                const catMap = {};
+                currentItem.boards.forEach((scoreVal, bIdx) => {
+                    totalEvaluated++;
+                    sumScore += scoreVal;
+                    const catName = elementCategories[bIdx];
+                    if (!catMap[catName]) catMap[catName] = { total: 0, obtained: 0 };
+                    catMap[catName].total += 1;
+                    catMap[catName].obtained += scoreVal;
+                });
+                const pdfTbodyC = document.getElementById('pdf-table-c-body');
+                pdfTbodyC.innerHTML = '';
+                currentItem.boards.forEach((scoreVal, bIdx) => {
+                    const elementName = boardNames[bIdx];
+                    const catName = elementCategories[bIdx];
+                    const catData = catMap[catName];
+                    const catScoreStr = `${catData.obtained} / ${catData.total} (${((catData.obtained/catData.total)*100).toFixed(0)}%)`;
+                    const statusStr = scoreVal === 1 ? 'Cemerlang' : 'Gagal';
+                    pdfTbodyC.innerHTML += `
+                        <tr>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${bIdx + 1}</td>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1;">${catName}</td>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1;">${elementName}</td>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${statusStr}</td>
+                            <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${catScoreStr}</td>
+                        </tr>
+                    `;
+                });
+                const overallPct = totalEvaluated > 0 ? (sumScore / totalEvaluated) * 100 : 0;
+                document.getElementById('pdf-stat-score').innerText = `${sumScore} / ${totalEvaluated}`;
+                document.getElementById('pdf-stat-percentage').innerText = `${overallPct.toFixed(1)}%`;
+                document.getElementById('pdf-stat-level').innerText = overallPct >= 80 ? 'Cemerlang' : (overallPct >= 50 ? 'Lulus' : 'Gagal');
+                // RENDER AM BOARD RESULT SUMMARY IN PDF
+                const pdfAmTbody = document.getElementById('pdf-table-am-body');
+                pdfAmTbody.innerHTML = '';
+                if (currentItem.amHasBoard === false) {
+                    pdfAmTbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="padding: 10px; text-align: center; font-weight: bold; color: #475569; background-color: #f1f5f9;">
+                                AM BOARD STATUS: NOT APPLICABLE
+                            </td>
+                        </tr>
+                    `;
+                    document.getElementById('pdf-am-stat-applicable').innerText = 'N/A';
+                    document.getElementById('pdf-am-stat-score').innerText = 'N/A';
+                    document.getElementById('pdf-am-stat-percentage').innerText = 'N/A';
+                    document.getElementById('pdf-am-stat-status').innerText = 'NOT APPLICABLE';
+                } else if (currentItem.amBoards && currentItem.amBoards.length === 7) {
+                    let amObtained = 0;
+                    let amApplicable = 0;
+                    amBoardElements.forEach((elem, eIdx) => {
+                        const rawVal = currentItem.amBoards[eIdx];
+                        let resultText = 'N/A';
+                        let scoreText = 'N/A';
+                        if (rawVal === 1) {
+                            resultText = 'Cemerlang / Available';
+                            scoreText = '1';
+                            amObtained += 1;
+                            amApplicable += 1;
+                        } else if (rawVal === 0) {
+                            resultText = 'Gagal / Not Available';
+                            scoreText = '0';
+                            amApplicable += 1;
+                        } else {
+                            resultText = 'Not Applicable';
+                            scoreText = 'N/A';
+                        }
+                        pdfAmTbody.innerHTML += `
+                            <tr>
+                                <td style="padding: 4px; border: 1px solid #cbd5e1; text-align: center;">${elem.id}</td>
+                                <td style="padding: 4px; border: 1px solid #cbd5e1;">${elem.name}</td>
+                                <td style="padding: 4px; border: 1px solid #cbd5e1; text-align: center;">${resultText}</td>
+                                <td style="padding: 4px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold;">${scoreText}</td>
+                            </tr>
+                        `;
+                    });
+                    if (amApplicable > 0) {
+                        const amPct = (amObtained / amApplicable) * 100;
+                        let amStatusStr = 'Gagal';
+                        if (amPct >= 80) amStatusStr = 'Cemerlang';
+                        else if (amPct >= 60) amStatusStr = 'Lulus';
+                        document.getElementById('pdf-am-stat-applicable').innerText = amApplicable;
+                        document.getElementById('pdf-am-stat-score').innerText = amObtained;
+                        document.getElementById('pdf-am-stat-percentage').innerText = `${amPct.toFixed(1)}%`;
+                        document.getElementById('pdf-am-stat-status').innerText = amStatusStr;
+                    } else {
+                        document.getElementById('pdf-am-stat-applicable').innerText = '0';
+                        document.getElementById('pdf-am-stat-score').innerText = '0';
+                        document.getElementById('pdf-am-stat-percentage').innerText = 'N/A';
+                        document.getElementById('pdf-am-stat-status').innerText = 'N/A';
+                    }
+                } else {
+                    pdfAmTbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="padding: 10px; text-align: center; font-weight: bold; color: #d97706; background-color: #fffbeb;">
+                                N/A – PENDING VERIFICATION
+                            </td>
+                        </tr>
+                    `;
+                    document.getElementById('pdf-am-stat-applicable').innerText = 'N/A';
+                    document.getElementById('pdf-am-stat-score').innerText = 'N/A';
+                    document.getElementById('pdf-am-stat-percentage').innerText = 'N/A';
+                    document.getElementById('pdf-am-stat-status').innerText = 'N/A – PENDING VERIFICATION';
+                }
+                const pdfTbodyD = document.getElementById('pdf-table-d-body');
+                pdfTbodyD.innerHTML = '';
+                let issueCount = 0;
+                currentItem.boards.forEach((val, bIdx) => {
+                    if (val === 0) {
+                        issueCount++;
+                        const boardName = boardNames[bIdx];
+                        const remarkText = (currentItem.remarks && currentItem.remarks[bIdx]) ? currentItem.remarks[bIdx] : 'Tiada butiran remark.';
+                        const picName = svName !== 'N/A' ? svName : 'Supervisor Bertugas';
+                        const hasImg = (currentItem.elementImages && currentItem.elementImages[bIdx]);
+                        pdfTbodyD.innerHTML += `
+                            <tr>
+                                <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${issueCount}</td>
+                                <td style="padding: 5px; border: 1px solid #cbd5e1;">Elemen: ${boardName}</td>
+                                <td style="padding: 5px; border: 1px solid #cbd5e1;">${remarkText}</td>
+                                <td style="padding: 5px; border: 1px solid #cbd5e1;">${picName}</td>
+                                <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center;">${hasImg ? 'IMAGE UPLOADED' : 'PENDING UPLOAD'}</td>
+                            </tr>
+                        `;
+                    }
+                });
+                if (issueCount === 0) {
+                    pdfTbodyD.innerHTML = `<tr><td colspan="5" style="padding: 8px; text-align: center; color: #10b981;">Tiada sebarang isu direkodkan.</td></tr>`;
+                }
+                const element = document.getElementById('pdf-single-report-template');
+                element.style.position = 'static';
+                element.style.left = '0';
+                const safeGroupName = currentItem.group.replace(/[^a-zA-Z0-9]/g, '_');
+                const opt = {
+                    margin: [5, 5, 5, 5],
+                    filename: `Audit_Report_${safeGroupName}_${auditDate}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, logging: false },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).outputPdf('blob').then((pdfBlob) => {
+                    const blobUrl = URL.createObjectURL(pdfBlob);
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = blobUrl;
+                    downloadLink.download = `Audit_Report_${safeGroupName}_${auditDate}.pdf`;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    setTimeout(() => { URL.revokeObjectURL(blobUrl); }, 10000);
+                    element.style.position = 'absolute';
+                    element.style.left = '-9999px';
+                }).catch(err => {
+                    console.error("Ralat PDF:", err);
+                    alert("Gagal menjana PDF.");
+                    element.style.position = 'absolute';
+                    element.style.left = '-9999px';
+                });
+            } catch (error) {
+                console.error("Ralat PDF:", error);
+                alert("Berlaku ralat semasa memproses fail PDF.");
+                const element = document.getElementById('pdf-single-report-template');
+                if(element) {
+                    element.style.position = 'absolute';
+                    element.style.left = '-9999px';
+                }
+            }
+        }
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "No,Kumpulan,Nama Item,Progress,AM Score\n";
+            window.currentData.forEach(row => {
+                const count1 = row.boards.filter(v => v === 1).length;
+                const pct = ((count1 / 13) * 100).toFixed(0);
+                let amPct = 'N/A';
+                if (row.amHasBoard) {
+                    const obt = row.amBoards.filter(v => v === 1).length;
+                    const app = row.amBoards.filter(v => v !== 'N/A').length;
+                    if (app > 0) amPct = `${((obt/app)*100).toFixed(0)}%`;
+                }
+                csvContent += `"${row.no}","${row.group}","${row.name}","${pct}%","${amPct}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.getElementById("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `SCM_Audit_Summary_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

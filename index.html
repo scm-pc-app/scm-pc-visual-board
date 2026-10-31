@@ -859,23 +859,23 @@
             { id: 7, name: "Fuguai Status", desc: "Closure status and tracking of resolved abnormalities" }
         ];
         const defaultInitialData = [
-            { no: 1, group: 'STAMPING', name: 'PC COIL DELIVERY', checked: true, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: Array(7).fill(1), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 2, group: 'STAMPING', name: 'PC STORAGE', checked: true, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: Array(7).fill(1), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 3, group: 'BA1', name: 'PC RECEIVING', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 4, group: 'BA1', name: 'PC SUPPLY', checked: false, boards: [1,1,1,1,1,0,1,1,1,0,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 5, group: 'BA1', name: 'PC RECEIVING & SUPPLY VX11', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 6, group: 'BA2', name: 'PC RECEIVING & SUPPLY', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 7, group: 'PAINTING', name: 'PC SPARE PART', checked: false, boards: [1,1,1,1,1,1,0,0,0,0,0,0,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,0,1,0,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 8, group: 'TF1', name: 'PC TRIM & CHASSIS', checked: false, boards: [1,1,1,1,1,1,0,0,0,0,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 9, group: 'TF1', name: 'PC FINAL', checked: false, boards: [0,0,0,0,0,0,1,1,1,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,0,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 10, group: 'TF1', name: 'PC ORDERING & HVI', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 11, group: 'TF1', name: 'PC INTERNAL SYNCHRO', checked: false, boards: [0,0,0,0,0,1,1,1,0,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 12, group: 'TF1', name: 'PC RECEIVING TFN', checked: false, boards: [1,1,1,1,1,1,1,1,0,0,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 13, group: 'TF1', name: 'PC RECEIVING TFW & TFS', checked: false, boards: [0,0,0,1,1,1,1,1,0,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 14, group: 'TF2', name: 'PC STORAGE & ORDERING', checked: false, boards: [0,0,0,1,1,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,0,1,1,0,0,1], amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 15, group: 'TF2', name: 'PC RECEIVING', checked: false, boards: [0,0,0,1,0,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 16, group: 'TF2', name: 'PC SPS', checked: false, boards: [0,0,0,0,0,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
-            { no: 17, group: 'TF2', name: 'PC SUPPLY', checked: false, boards: [0,0,0,1,1,1,0,0,0,0,0,0,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: null, amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' }
+            { no: 1, group: 'STAMPING', name: 'PC COIL DELIVERY', checked: true, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: Array(7).fill(1), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 2, group: 'STAMPING', name: 'PC STORAGE', checked: true, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: Array(7).fill(1), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 3, group: 'BA1', name: 'PC RECEIVING', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 4, group: 'BA1', name: 'PC SUPPLY', checked: false, boards: [1,1,1,1,1,0,1,1,1,0,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 5, group: 'BA1', name: 'PC RECEIVING & SUPPLY VX11', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 6, group: 'BA2', name: 'PC RECEIVING & SUPPLY', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,1,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 7, group: 'PAINTING', name: 'PC SPARE PART', checked: false, boards: [1,1,1,1,1,1,0,0,0,0,0,0,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: [1,1,0,1,0,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 8, group: 'TF1', name: 'PC TRIM & CHASSIS', checked: false, boards: [1,1,1,1,1,1,0,0,0,0,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 9, group: 'TF1', name: 'PC FINAL', checked: false, boards: [0,0,0,0,0,0,1,1,1,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: [1,1,1,1,0,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 10, group: 'TF1', name: 'PC ORDERING & HVI', checked: false, boards: [1,1,1,1,1,1,1,1,1,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 11, group: 'TF1', name: 'PC INTERNAL SYNCHRO', checked: false, boards: [0,0,0,0,0,1,1,1,0,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 12, group: 'TF1', name: 'PC RECEIVING TFN', checked: false, boards: [1,1,1,1,1,1,1,1,0,0,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 13, group: 'TF1', name: 'PC RECEIVING TFW & TFS', checked: false, boards: [0,0,0,1,1,1,1,1,0,1,0,1,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: false, amBoards: Array(7).fill('N/A'), amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 14, group: 'TF2', name: 'PC STORAGE & ORDERING', checked: false, boards: [0,0,0,1,1,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: [1,0,1,1,0,0,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 15, group: 'TF2', name: 'PC RECEIVING', checked: false, boards: [0,0,0,1,0,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 16, group: 'TF2', name: 'PC SPS', checked: false, boards: [0,0,0,0,0,0,0,0,0,0,0,1,0], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' },
+            { no: 17, group: 'TF2', name: 'PC SUPPLY', checked: false, boards: [0,0,0,1,1,1,0,0,0,0,0,0,1], remarks: Array(13).fill(''), elementImages: Array(13).fill(null), genbaImages: Array(13).fill(null), amHasBoard: true, amBoards: [1,1,1,1,1,1,1], amElementImages: Array(7).fill(null), amRemark: '' }
         ];
         window.currentData = JSON.parse(JSON.stringify(defaultInitialData));
         window.auditRecords = [];
@@ -1097,7 +1097,15 @@
                     if (parsed.data) {
                         window.currentData = parsed.data.map(item => {
                             if (!item.elementImages) item.elementImages = Array(13).fill(null);
-                            if (item.genbaImages === undefined) item.genbaImages = null;
+                            if (!item.genbaImages || !Array.isArray(item.genbaImages)) {
+                                if (typeof item.genbaImages === 'string') {
+                                    const oldImg = item.genbaImages;
+                                    item.genbaImages = Array(13).fill(null);
+                                    item.genbaImages[0] = oldImg;
+                                } else {
+                                    item.genbaImages = Array(13).fill(null);
+                                }
+                            }
                             if (item.amHasBoard === undefined) item.amHasBoard = true;
                             if (!item.amBoards) item.amBoards = Array(7).fill(1);
                             if (!item.amElementImages) item.amElementImages = Array(7).fill(null);
@@ -1148,12 +1156,15 @@
             updateNotificationsBadgeAndList();
             renderAuditSummaryView();
         }
-        function handleGenbaPhotographicEvidenceUpload(realIndex, event) {
+        function handleGenbaPhotographicEvidenceUpload(realIndex, boardIdx, event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                window.currentData[realIndex].genbaImages = e.target.result;
+                if (!window.currentData[realIndex].genbaImages || !Array.isArray(window.currentData[realIndex].genbaImages)) {
+                    window.currentData[realIndex].genbaImages = Array(13).fill(null);
+                }
+                window.currentData[realIndex].genbaImages[boardIdx] = e.target.result;
                 saveSvProfile();
                 renderTable();
                 alert("Gambar bukti Genba Admin/Auditor berjaya dimuat naik & disahkan.");
@@ -1177,7 +1188,7 @@
                     window.currentData[realIndex].boards = Array(13).fill(1);
                     window.currentData[realIndex].remarks = Array(13).fill('');
                     window.currentData[realIndex].elementImages = Array(13).fill(null);
-                    window.currentData[realIndex].genbaImages = null;
+                    window.currentData[realIndex].genbaImages = Array(13).fill(null);
                     window.currentData[realIndex].amBoards = Array(7).fill(1);
                     window.currentData[realIndex].amElementImages = Array(7).fill(null);
                     window.currentData[realIndex].amRemark = '';
@@ -1397,7 +1408,7 @@
                         const currentRemark = (item.remarks && item.remarks[bIdx]) ? item.remarks[bIdx] : '';
                         const supervisorImg = (item.elementImages && item.elementImages[bIdx]) ? item.elementImages[bIdx] : null;
                         const hasSupImg = supervisorImg !== null;
-                        const genbaImg = item.genbaImages || null;
+                        const genbaImg = (item.genbaImages && Array.isArray(item.genbaImages)) ? item.genbaImages[bIdx] : null;
                         const hasGenbaImg = genbaImg !== null;
 
                         zeroRemarksHTML += `
@@ -1421,9 +1432,9 @@
                                     <div class="p-2 bg-indigo-50/80 rounded border border-indigo-200 space-y-1.5 mt-2">
                                         <span class="block font-bold text-indigo-900 uppercase text-[9px]"><i class="fa-solid fa-camera mr-1"></i>GENBA PHOTOGRAPHIC EVIDENCE (ADMIN / AUDITOR):</span>
                                         <div class="flex items-center justify-between gap-2">
-                                            <label class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
+                                            <label for="genba-file-${realIndex}-${bIdx}" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
                                                 <i class="fa-solid fa-upload"></i> Choose File / Upload Genba Photo
-                                                <input type="file" accept="image/*" onchange="handleGenbaPhotographicEvidenceUpload(${realIndex}, event)" class="hidden">
+                                                <input id="genba-file-${realIndex}-${bIdx}" type="file" accept="image/*" onchange="handleGenbaPhotographicEvidenceUpload(${realIndex}, ${bIdx}, event)" class="hidden">
                                             </label>
                                             ${hasGenbaImg ? `<img src="${genbaImg}" alt="Genba Evidence Preview" class="h-8 w-12 object-cover rounded border border-indigo-300 shadow-sm">` : '<span class="text-slate-400 italic text-[9px]">Belum ada gambar Genba</span>'}
                                         </div>
@@ -1439,9 +1450,9 @@
                                     <div class="p-2 bg-white rounded border border-slate-200 space-y-1.5">
                                         <span class="block font-bold text-emerald-800 uppercase"><i class="fa-solid fa-camera mr-1"></i>SUPERVISOR IMPROVEMENT EVIDENCE:</span>
                                         <div class="flex items-center justify-between gap-2">
-                                            <label class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
+                                            <label for="sup-file-${realIndex}-${bIdx}" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
                                                 <i class="fa-solid fa-upload"></i> ${hasSupImg ? 'Tukar Gambar' : 'Choose File / Upload'}
-                                                <input type="file" accept="image/*" onchange="handleElementImageUpload(${realIndex}, ${bIdx}, event)" class="hidden">
+                                                <input id="sup-file-${realIndex}-${bIdx}" type="file" accept="image/*" onchange="handleElementImageUpload(${realIndex}, ${bIdx}, event)" class="hidden">
                                             </label>
                                             ${hasSupImg ? `<img src="${supervisorImg}" alt="Supervisor Evidence Preview" class="h-8 w-12 object-cover rounded border border-emerald-300 shadow-sm">` : '<span class="text-slate-400 italic text-[9px]">Belum ada gambar muat naik</span>'}
                                         </div>
@@ -1571,9 +1582,9 @@
                                 <div class="p-2 bg-indigo-50/80 rounded border border-indigo-200 space-y-1.5 text-[10px]">
                                     <span class="font-bold text-indigo-900 uppercase"><i class="fa-solid fa-camera mr-1"></i>Genba Photographic Evidence:</span>
                                     <div class="flex items-center justify-between gap-2">
-                                        <label class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
+                                        <label for="am-genba-file-${realIndex}-${idx}" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded font-bold text-[9px] cursor-pointer shadow transition flex items-center gap-1">
                                             <i class="fa-solid fa-upload"></i> Choose File / Upload Genba Photo
-                                            <input type="file" accept="image/*" onchange="handleAmElementImageUpload(${realIndex}, ${idx}, event)" class="hidden">
+                                            <input id="am-genba-file-${realIndex}-${idx}" type="file" accept="image/*" onchange="handleAmElementImageUpload(${realIndex}, ${idx}, event)" class="hidden">
                                         </label>
                                         ${savedSupImg ? `<img src="${savedSupImg}" alt="${e.name} Evidence" class="h-8 w-12 object-cover rounded border border-indigo-300 shadow-sm shrink-0">` : '<span class="text-slate-400 italic text-[9px]">Belum ada gambar Genba</span>'}
                                     </div>
@@ -1583,7 +1594,7 @@
                                 <div class="space-y-1">
                                     <span class="block font-bold text-emerald-800 text-[10px] uppercase">SUPERVISOR IMPROVEMENT EVIDENCE:</span>
                                     <div class="flex items-center gap-3">
-                                        <input type="file" accept="image/*" onchange="handleAmElementImageUpload(${realIndex}, ${idx}, event)" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-bold file:bg-emerald-700 file:text-white hover:file:bg-emerald-600 cursor-pointer">
+                                        <input id="am-sup-file-${realIndex}-${idx}" type="file" accept="image/*" onchange="handleAmElementImageUpload(${realIndex}, ${idx}, event)" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-bold file:bg-emerald-700 file:text-white hover:file:bg-emerald-600 cursor-pointer">
                                         ${savedSupImg ? `<img src="${savedSupImg}" alt="${e.name} Evidence" class="h-10 w-14 rounded border border-emerald-300 object-cover shrink-0">` : '<span class="text-slate-400 italic text-[9px]">Tiada gambar</span>'}
                                     </div>
                                 </div>
@@ -1697,8 +1708,14 @@
             }
             // PART 1 & PART 4: ADMIN GENBA PHOTOGRAPHIC EVIDENCE VALIDATION
             if (role === 'ADMIN') {
-                const hasGenbaImg = filtered[0].genbaImages !== null && filtered[0].genbaImages !== undefined && filtered[0].genbaImages !== '';
-                if (!hasGenbaImg) {
+                let hasMissingGenba = false;
+                filtered[0].boards.forEach((val, bIdx) => {
+                    if (val === 0) {
+                        const hasImg = filtered[0].genbaImages && Array.isArray(filtered[0].genbaImages) && filtered[0].genbaImages[bIdx];
+                        if (!hasImg) hasMissingGenba = true;
+                    }
+                });
+                if (hasMissingGenba) {
                     alert("WARNING: GENBA PHOTOGRAPHIC EVIDENCE IS REQUIRED BEFORE SAVING THIS AUDIT RECORD.\n\nSila muat naik Gambar Suasana / Keadaan Sebenar Genba di bahagian elemen bermasalah (Marked 0) sebelum menyimpan rekod audit ini.");
                     return;
                 }
@@ -2199,7 +2216,7 @@
                 csvContent += `"${row.no}","${row.group}","${row.name}","${pct}%","${amPct}"\n`;
             });
             const encodedUri = encodeURI(csvContent);
-            const link = document.getElementById("a");
+            const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
             link.setAttribute("download", `SCM_Audit_Summary_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(link);
